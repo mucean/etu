@@ -5,14 +5,53 @@ namespace Etu;
 class Application
 {
     /**
+     * handle exception if $this->start()
+     *
+     * @var callable
+     */
+    protected $exception_handler = null;
+
+    /**
+     * middleware class
+     *
+     * @var \Etu\Middleware
+     */
+    protected $middleware = null;
+
+    public function __construct()
+    {
+        $this->middleware = new \Etu\Middleware;
+    }
+    
+    /**
      * Start app handle request
      *
-     * @return integer
+     * @return null
      */
     public function start()
     {
-        //todo start
-        return 1;
+        // todo complete Request and Response
+        try {
+            $this->middlewar->execute();
+        } catch (\Exception $e) {
+            $handler = $this->exception_handler;
+            if ($handler === null) {
+                $handler = function () use ($request, $response) {
+                    // todo handle exception
+                };
+            }
+            call_user_func_array($handler, [$e]);
+        }
+    }
+
+    /**
+     * setExceptionHandler
+     * @return null
+     * @author mucean
+     **/
+    public function setExceptionHandler(callable $handler)
+    {
+        $this->exception_handler = $handler;
     }
 
     /**
@@ -67,4 +106,3 @@ class Application
         spl_autoload_register($func);
     }
 }
-

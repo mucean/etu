@@ -55,6 +55,6 @@ trait Singleton
     public function __clone()
     {
         $classname = get_called_class();
-        throw new \Exception('Cloning ' . $classname . ' is not allowed!');
+        throw new \Exception('Clone ' . $classname . ' is not allowed!');
     }
 }

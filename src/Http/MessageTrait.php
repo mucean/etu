@@ -12,7 +12,7 @@ trait MessageTrait
 
     protected $headers = [];
 
-    protected $header_lines = [];
+    protected $headerLines = [];
 
     public function getProtocolVersion()
     {
@@ -29,7 +29,7 @@ trait MessageTrait
 
     public function getHeaders()
     {
-        return $this->header_lines;
+        return $this->headerLines;
     }
 
     public function hasHeader($name)
@@ -58,9 +58,9 @@ trait MessageTrait
         }
 
         $name = trim($name);
-        $header_name = strtolower($name);
+        $headerName = strtolower($name);
 
-        $this->headers[$header_name] = $this->normalizeHeaderValue($value);
+        $this->headers[$headerName] = $this->normalizeHeaderValue($value);
 
         $this->syncHeaderLines($name);
 
@@ -76,21 +76,21 @@ trait MessageTrait
         }
 
         $name = trim($name);
-        $header_name = strtolower($name);
+        $headerName = strtolower($name);
         if ($this->hasHeader($name)) {
             if (is_array($value)) {
-                foreach ($value as $each_value) {
-                    if (!in_array($each_value, $this->getHeader($name))) {
-                        $this->headers[$header_name][] = trim($value);
+                foreach ($value as $eachValue) {
+                    if (!in_array($eachValue, $this->getHeader($name))) {
+                        $this->headers[$headerName][] = trim($value);
                     }
                 }
             } else {
                 if (!in_array($value, $this->getHeader($name))) {
-                    $this->headers[$header_name][] = trim($value);
+                    $this->headers[$headerName][] = trim($value);
                 }
             }
         } else {
-            $this->headers[$header_name] = $this->normalizeHeaderValue($value);
+            $this->headers[$headerName] = $this->normalizeHeaderValue($value);
         }
 
         $this->syncHeaderLines($name);
@@ -125,13 +125,13 @@ trait MessageTrait
     protected function normalizeHeaderValue($value)
     {
         if (is_array($value)) {
-            foreach ($value as &$each_value) {
-                if (is_array($each_value)) {
+            foreach ($value as &$eachValue) {
+                if (is_array($eachValue)) {
                     throw new \InvalidArgumentException(
                         'header value must be an type can be convert to string'
                     );
                 }
-                $each_value = trim($each_value);
+                $eachValue = trim($eachValue);
             }
             return $value;
         } else {
@@ -141,33 +141,33 @@ trait MessageTrait
 
     protected function syncHeaderLines($name)
     {
-        $header_name = strtolower($name);
-        foreach (array_keys($this->header_lines) as $key) {
-            if ($header_name === strtolower($key)) {
+        $headerName = strtolower($name);
+        foreach (array_keys($this->headerLines) as $key) {
+            if ($headerName === strtolower($key)) {
                 unset($this->headers[$key]);
             }
         }
 
-        if ($this->hasHeader($header_name)) {
-            $this->header_lines[$name] = $this->headers[$header_name];
+        if ($this->hasHeader($headerName)) {
+            $this->headerLines[$name] = $this->headers[$headerName];
         }
     }
 
     private function setHeaders(array $headers)
     {
-        $this->header_lines = $this->headers = [];
+        $this->headerLines = $this->headers = [];
         foreach ($headers as $name => $value) {
             $name = trim($name);
-            $header_name = strtolower($name);
+            $headerName = strtolower($name);
             if (!is_array($value)) {
                 $value = trim($value);
-                $this->headers[$header_name][] = $value;
-                $this->header_lines[$name][] = $value;
+                $this->headers[$headerName][] = $value;
+                $this->headerLines[$name][] = $value;
             } else {
-                foreach ($value as $each_value) {
-                    $each_value = trim($each_value);
-                    $this->headers[$header_name][] = $each_value;
-                    $this->headerLines[$name][] = $each_value;
+                foreach ($value as $eachValue) {
+                    $eachValue = trim($eachValue);
+                    $this->headers[$headerName][] = $eachValue;
+                    $this->headerLines[$name][] = $eachValue;
                 }
             }
         }

@@ -15,7 +15,7 @@ class Request extends ServerRequestInterface
         $this->servers = $_SERVER;
         foreach ($this->servers as $key => $value) {
             if (strpos($key, 'HTTP_') === 0) {
-                $header_name = str_replace(
+                $headerName = str_replace(
                     ' ',
                     '-',
                     ucwords(strtolower(str_replace(
@@ -24,8 +24,8 @@ class Request extends ServerRequestInterface
                         substr($key, 5)
                     )))
                 );
-                $this->headers[$header_name] = $value;
-                $this->header_lines[strtolower($header_name)] = $value;
+                $this->headers[$headerName] = $value;
+                $this->headerLines[strtolower($headerName)] = $value;
             }
         }
     }

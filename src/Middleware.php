@@ -36,15 +36,15 @@ class Middleware
      */
     public function execute()
     {
-        $after_execs = [];
+        $afterExecs = [];
         foreach ($this->middlewares as $middleware) {
             $res = call_user_func_array($middleware, []);
             if ($res instanceof \Generator) {
-                $after_execs[] = $res;
+                $afterExecs[] = $res;
             }
         }
 
-        while (($handle = array_pop($after_execs)) !== null) {
+        while (($handle = array_pop($afterExecs)) !== null) {
             $handle->next();
         }
     }

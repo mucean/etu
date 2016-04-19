@@ -9,7 +9,7 @@ class Application
      *
      * @var callable
      */
-    protected $exception_handler = null;
+    protected $exceptionHandler = null;
 
     /**
      * middleware class
@@ -34,7 +34,7 @@ class Application
         try {
             $this->middlewar->execute();
         } catch (\Exception $e) {
-            $handler = $this->exception_handler;
+            $handler = $this->exceptionHandler;
             if ($handler === null) {
                 $handler = function () use ($request, $response) {
                     // todo handle exception
@@ -51,7 +51,7 @@ class Application
      **/
     public function setExceptionHandler(callable $handler)
     {
-        $this->exception_handler = $handler;
+        $this->exceptionHandler = $handler;
     }
 
     /**
@@ -75,28 +75,28 @@ class Application
         }
 
         if ($func === null) {
-            $pre_namespace = ltrim($namespace, '\\');
-            $pre_namespace_len = strlen($pre_namespace);
+            $preNamespace = ltrim($namespace, '\\');
+            $preNamespaceLen = strlen($preNamespace);
             $func = function ($class) use (
-                $pre_namespace,
+                $preNamespace,
                 $dir,
-                $pre_namespace_len
+                $preNamespaceLen
             ) {
                 $class = ltrim($class, '\\');
-                if ($pre_namespace === '') {
-                    $part_dir = str_replace('\\', '/', $class);
+                if ($preNamespace === '') {
+                    $partDir = str_replace('\\', '/', $class);
                 } else {
-                    $validate_result = strpos($class, $pre_namespace);
-                    if ($validate_result === false || $validate_result > 0) {
+                    $validateResult = strpos($class, $preNamespace);
+                    if ($validateResult === false || $validateResult > 0) {
                         return null;
                     }
-                    $part_dir = str_replace(
+                    $partDir = str_replace(
                         '\\',
                         DIRECTORY_SEPARATOR,
-                        substr($class, $pre_namespace_len + 1)
+                        substr($class, $preNamespaceLen + 1)
                     );
                 }
-                $file = $dir . DIRECTORY_SEPARATOR . $part_dir . '.php';
+                $file = $dir . DIRECTORY_SEPARATOR . $partDir . '.php';
                 if (is_file($file)) {
                     include_once $file;
                 }

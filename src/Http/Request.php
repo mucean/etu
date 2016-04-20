@@ -3,6 +3,7 @@
 namespace Etu\Http;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UriInterface;
 
 class Request extends ServerRequestInterface
 {
@@ -10,23 +11,31 @@ class Request extends ServerRequestInterface
 
     protected $servers = [];
 
+    protected $uri = null;
+
     public function __construct()
     {
         $this->servers = $_SERVER;
-        foreach ($this->servers as $key => $value) {
-            if (strpos($key, 'HTTP_') === 0) {
-                $headerName = str_replace(
-                    ' ',
-                    '-',
-                    ucwords(strtolower(str_replace(
-                        '_',
-                        ' ',
-                        substr($key, 5)
-                    )))
-                );
-                $this->headers[$headerName] = $value;
-                $this->headerLines[strtolower($headerName)] = $value;
+        $this->setHeaders(getallheaders());
+        if (!$this->hasHeader('host') && isset($_SERVER['SERVER_NAME'])) {
+            $this->withHeader('Host', $_SERVER['SERVER_NAME']);
+        }
+    }
+
+    public function withUri(UriInterface $uri, $preserveHost = false)
+    {
+        if ($this->uri === $uri) {
+            return $this;
+        }
+
+        $this->uri = $uri;
+
+        $host = $uri->getHost();
+        if (!$preserveHost && $host) {
+            if ($port = $uri->getPort()) {
+                $host = $host . $port;
             }
+            $this->withHeader('Host', $host);
         }
     }
 }

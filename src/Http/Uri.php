@@ -6,14 +6,15 @@ use Psr\Http\Message\UriInterface;
 
 class Uri implements UriInterface
 {
-    protected $scheme;
-    protected $host;
-    protected $port;
-    protected $user;
-    protected $pass;
-    protected $path;
-    protected $query;
-    protected $fragment;
+    protected $scheme = false;
+    protected $host = false;
+    protected $port = false;
+    protected $user = false;
+    protected $pass = false;
+    protected $path = false;
+    protected $query = false;
+    protected $fragment = false;
+    protected $component = false;
 
     protected static $standardPort = [
         'http' => 80,
@@ -22,31 +23,34 @@ class Uri implements UriInterface
 
     public function __construct($url)
     {
-        $urlComponent = parse_url($url);
-        if ($urlComponent === false) {
+        $this->component = parse_url($url);
+        if ($this->component === false) {
             throw new \Exception('Class Uri construct with a valid url');
         }
     }
 
     public function getScheme()
     {
+        if ($this->scheme === false) {
+            $this->scheme = isset($this->component['scheme'])
+                ? $this->component['scheme']
+                : '';
+        }
         return $this->scheme;
     }
 
     public function getAuthority()
     {
-        if (empty($this->host)) {
+        if (empty($this->getHost())) {
             return '';
         }
 
-        $authority = $this->user;
-        if (!empty($this->pass)) {
-            $authority .= ':' . $this->pass;
+        $authority = $this->host;
+        if ($userInfo = $this->getUserInfo()) {
+            $authority = $userInfo . '@' . $this->host;
         }
 
-        $authority .= '@' . $this->host;
-
-        if ($this->port !== null && $this->validatePort($this->scheme, $this->host, $this->port)) {
+        if ($this->getPort() !== null && $this->validatePort($this->scheme, $this->host, $this->port)) {
             $authority .= ':' . $this->port;
         }
 
@@ -55,6 +59,15 @@ class Uri implements UriInterface
 
     public function getUserInfo()
     {
+        if ($this->user === false) {
+            $this->user = isset($this->component['user'])
+                ? $this->component['user']
+                : '';
+            $this->pass = isset($this->component['pass'])
+                ? $this->component['pass']
+                : '';
+        }
+
         if (empty($this->user)) {
             return '';
         }
@@ -70,39 +83,40 @@ class Uri implements UriInterface
 
     public function getHost()
     {
+        if ($this->host === false) {
+            $this->host = isset($this->component['host'])
+                ? strtolower($this->component['host'])
+                : '';
+        }
         return $this->host;
     }
 
     public function getPort()
     {
+        if ($this->port === false) {
+            $this->port = isset($this->component['port'])
+                ? $this->normalizePort($this->scheme, $this->host, $this->component['port'])
+                : null;
+        }
         return $this->port;
     }
 
-    protected function applyComponent(array $urlComponent)
+    public function getPath()
     {
-        $this->scheme = isset($urlComponent['scheme'])
-            ? $urlComponent['scheme']
+        if ($this->path === false) {
+            $this->path = isset($this->component['path'])
+                ? $this->component['path']
+                : '';
+        }
+    }
+
+    protected function applyComponent()
+    {
+        $this->query = isset($this->component['query'])
+            ? $this->component['query']
             : '';
-        $this->host = isset($urlComponent['host'])
-            ? strtolower($urlComponent['host'])
-            : '';
-        $this->port = isset($urlComponent['port'])
-            ? $this->normalizePort($this->scheme, $this->host, $urlComponent['port'])
-            : null;
-        $this->user = isset($urlComponent['user'])
-            ? $urlComponent['user']
-            : '';
-        $this->pass = isset($urlComponent['pass'])
-            ? $urlComponent['pass']
-            : '';
-        $this->path = isset($urlComponent['path'])
-            ? $urlComponent['path']
-            : '';
-        $this->query = isset($urlComponent['query'])
-            ? $urlComponent['query']
-            : '';
-        $this->fragment = isset($urlComponent['fragment'])
-            ? $urlComponent['fragment']
+        $this->fragment = isset($this->component['fragment'])
+            ? $this->component['fragment']
             : '';
     }
 

@@ -110,16 +110,15 @@ trait MessageTrait
 
     public function getBody()
     {
-        // todo if empty return stream
-        return $this->stream ?: '';
+        return $this->body;
     }
 
     public function withBody(StreamInterface $body)
     {
-        if ($body !== $this->stream) {
-            $this->stream = $body;
+        if ($body !== $this->body) {
+            $this->body = $body;
         }
-        return $this->stream;
+        return $this->body;
     }
 
     protected function normalizeHeaderValue($value)

@@ -123,8 +123,9 @@ class Request implements ServerRequestInterface
 
     public function getParsedBody()
     {
-        $contentType = $this->getHeaderLine('content_type');
-        if ($contentType === 'application/x-www-form-urlencoded' || $contentType === 'multipart/form-data') {
+        $contentType = strtolower($this->getHeaderLine('content_type'));
+        if (strpos($contentType, 'application/x-www-form-urlencoded') !== false ||
+            strpos($contentType, 'multipart/form-data') !== false) {
             return $this->post;
         }
 
@@ -150,7 +151,7 @@ class Request implements ServerRequestInterface
 
         if (!is_array($data) || !is_null($data)) {
             throw new \InvalidArgumentException(
-                'Argument $dllata must be a array or null parsed from getParsedBody method'
+                'Argument $data must be a array or null parsed from getParsedBody method'
             );
         }
 

@@ -18,6 +18,7 @@ class Request implements ServerRequestInterface
     protected $post = [];
     protected $files = [];
     protected $uploadedFiles;
+    protected $parsedBody = false;
 
     protected $uri = null;
 
@@ -123,16 +124,22 @@ class Request implements ServerRequestInterface
 
     public function getParsedBody()
     {
-        $contentType = strtolower($this->getHeaderLine('content_type'));
-        if (strpos($contentType, 'application/x-www-form-urlencoded') !== false ||
-            strpos($contentType, 'multipart/form-data') !== false) {
-            return $this->post;
+        if (!$this->parsedBody !== false) {
+            return $this->parsedBody;
+        }
+
+        if ($this->getMethod() === 'post') {
+            $contentType = strtolower($this->getHeaderLine('content_type'));
+            if (strpos($contentType, 'application/x-www-form-urlencoded') !== false ||
+                strpos($contentType, 'multipart/form-data') !== false) {
+                return $this->parsedBody = $this->post;
+            }
         }
 
         $body = (string) $this->getBody();
 
         if ($body === '') {
-            return null;
+            return $this->parsedBody = null;
         }
 
         $parseBody = json_decode($body, true);

@@ -18,6 +18,8 @@ class Request implements ServerRequestInterface
     protected $post = [];
     protected $files = [];
     protected $uploadedFiles;
+    protected $attributes = [];
+    protected $requestTarget;
 
     protected $uri = null;
 
@@ -167,6 +169,66 @@ class Request implements ServerRequestInterface
         } else {
             $new = $new->withBody(new Stream());
         }
+
+        return $new;
+    }
+
+    public function getAttributes()
+    {
+        $this->attributes;
+    }
+
+    public function getAttribute($name, $default = null)
+    {
+        return isset($this->attributes[$name]) ?
+            $this->attributes[$name] :
+            $default;
+    }
+
+    public function withAttribute($name, $value)
+    {
+        if ($this->getAttribute($name) === $value) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->attributes[$name] = $value;
+        return $new;
+    }
+
+    public function withoutAttribute($name)
+    {
+        if (!isset($this->attributes[$name])) {
+            return $this;
+        }
+
+        $new = clone $this;
+        unset($new->attributes[$name]);
+        return $new;
+    }
+
+    public function getRequestTarget()
+    {
+        if ($this->uri === null) {
+            return '/';
+        }
+
+        $target = $this->uri->getPath();
+        if ($query = $this->uri->getQuery()) {
+            $target = $target . '?' . $query;
+        }
+
+        return $this->requestTarget = $target;
+    }
+
+    public function withRequestTarget($requestTarget)
+    {
+        if ($this->requestTarget === $requestTarget) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->requestTarget = $requestTarget;
 
         return $new;
     }

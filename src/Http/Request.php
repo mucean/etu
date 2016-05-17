@@ -7,6 +7,7 @@ use Psr\Http\Message\UriInterface;
 use Etu\Http\Uri;
 use Etu\Http\UploadedFile;
 use Etu\Stream;
+use InvalidArgumentException;
 
 class Request implements ServerRequestInterface
 {
@@ -21,6 +22,10 @@ class Request implements ServerRequestInterface
     protected $parsedBody = false;
     protected $attributes = [];
     protected $requestTarget;
+    protected $originalMethod;
+    protected $method;
+
+    protected $validMethod = ['GET', 'POST', 'PUT', 'DELETE', 'CONNECT', 'HEAD', 'OPTIONS', 'PATCH', 'TRACE'];
 
     protected $uri = null;
 
@@ -31,6 +36,7 @@ class Request implements ServerRequestInterface
         $this->get = $_GET;
         $this->post = $_POST;
         $this->files = $_FILES;
+        $this->originalMethod = $this->servers['REQUEST_METHOD'];
         $this->setHeaders(getallheaders());
         if (!$this->hasHeader('host') && isset($_SERVER['SERVER_NAME'])) {
             $this->withHeader('Host', $_SERVER['SERVER_NAME']);
@@ -240,7 +246,52 @@ class Request implements ServerRequestInterface
         return $new;
     }
 
-    public function getRequestUri()
+    public function getMethod()
+    {
+        if ($this->method !== null) {
+            return $this->method;
+        }
+
+        $this->method = $this->originalMethod;
+        $overMethod = $this->getHeaderLine('X-Http-Method-Override');
+
+        if ($overMethod) {
+            $this->method = $this->filterMethod($overMethod);
+        }
+
+        return $this->method;
+    }
+
+    public function withMethod($method)
+    {
+        if ($this->method === $method) {
+            return $this;
+        }
+
+        $method = $this->filterMethod($method);
+
+        $new = clone $this;
+        $new->method = $method;
+
+        return $new;
+    }
+
+    protected function filterMethod($method)
+    {
+        if (!is_string($method)) {
+            throw new InvalidArgumentException('request method must be a string');
+        }
+
+        $method = strtoupper($method);
+
+        if (in_array($method, $this->validMethod)) {
+            return $method;
+        }
+
+        throw new InvalidArgumentException('Request method must be a valid method');
+    }
+
+    public function getUri()
     {
         if ($this->uri !== null) {
             return $this->uri;

@@ -3,6 +3,7 @@
 namespace Etu\Http;
 
 use Psr\Http\Message\UriInterface;
+use InvalidArgumentException;
 
 class Uri implements UriInterface
 {
@@ -22,16 +23,53 @@ class Uri implements UriInterface
     protected $query = false;
     protected $fragment = false;
 
-    public function __construct($url = null)
+    public static function buildFromUrl($url = null)
     {
         if ($url === null) {
             return $this;
         }
+
+        if (!is_string($url)) {
+            throw new \InvalidArgumentException(
+                sprintf('build a uri instance need a url of string type, %s given', gettype($url))
+            );
+        }
+        $scheme = $host = $path = $query = $fragment = $user = $pass = '';
+        $port = null;
         $component = parse_url($url);
         if ($component === false) {
             throw new \Exception('Class Uri construct with a valid url');
         }
-        $this->applyComponent($component);
+        extract($component);
+        return new static($scheme, $host, $port, $path, $query, $fragment, $user, $pass);
+    }
+
+    public function __construct(
+        $scheme,
+        $host,
+        $port = null,
+        $path = '',
+        $query = '',
+        $fragment = '',
+        $user = '',
+        $pass = ''
+    ) {
+        $scheme = $this->normalizeScheme($scheme);
+        if (!$this->validateScheme($scheme)) {
+            throw new InvalidArgumentException('scheme of Uri must be a valid value');
+        }
+        $this->scheme = $scheme;
+        $this->host = $host;
+        $port = $this->normalizePort($port);
+        if (!$this->validatePort($port)) {
+            throw new InvalidArgumentException('port of Uri must be a valid value');
+        }
+        $this->port = $port;
+        $this->path = empty($path) ? '' : $this->normalizePath($path);
+        $this->query = empty($query) ? '' : $this->normalizeQueryAndFragment($query);
+        $this->fragment = empty($fragment) ? '' : $this->normalizeQueryAndFragment($fragment);
+        $this->user = $user;
+        $this->pass = $pass;
     }
 
     public function getScheme()
@@ -177,27 +215,21 @@ class Uri implements UriInterface
 
     public function __toString()
     {
-        return $this->createUriString(
-            $this->scheme,
-            $this->getAuthority(),
-            $this->path,
-            $this->query,
-            $this->fragment
-        );
+        return $this->createUriString();
     }
 
     /**
      * Create a URI string from its various parts
      *
-     * @param string $scheme
-     * @param string $authority
-     * @param string $path
-     * @param string $query
-     * @param string $fragment
      * @return string
      */
-    private function createUriString($scheme, $authority, $path, $query, $fragment)
+    private function createUriString()
     {
+        $scheme = $this->getScheme();
+        $authority = $this->getAuthority();
+        $path = $this->path;
+        $query = $this->query;
+        $fragment = $this->fragment;
         $uri = '';
 
         if (!empty($scheme)) {
@@ -226,32 +258,12 @@ class Uri implements UriInterface
         return $uri;
     }
 
-    protected function applyComponent(&$component)
+    protected function normalizeScheme($scheme)
     {
-        $this->scheme = isset($component['scheme'])
-            ? $component['scheme']
-            : '';
-        $this->user = isset($component['user'])
-            ? $component['user']
-            : '';
-        $this->pass = isset($component['pass'])
-            ? $component['pass']
-            : '';
-        $this->host = isset($component['host'])
-            ? strtolower($component['host'])
-            : '';
-        $this->port = isset($component['port'])
-            ? $this->normalizePort($this->scheme, $this->host, $component['port'])
-            : null;
-        $this->path = isset($component['path'])
-            ? $this->normalizePath($component['path'])
-            : '';
-        $this->query = isset($component['query'])
-            ? $this->normalizeQueryAndFragment($component['query'])
-            : '';
-        $this->fragment = isset($component['fragment'])
-            ? $this->normalizeQueryAndFragment($component['fragment'])
-            : '';
+        if (!is_string($scheme) || !method_exists($scheme, '__toString')) {
+            throw new InvalidArgumentException('scheme of Uri must be a string');
+        }
+        return str_replace('://', '', $scheme);
     }
 
     protected function normalizePort($scheme, $host, $port)
@@ -285,6 +297,19 @@ class Uri implements UriInterface
         return preg_replace_callback($preg, function ($matches) {
             return rawurlencode($matches[0]);
         }, $str);
+    }
+
+    protected function validateScheme($scheme)
+    {
+        if ($scheme === '') {
+            return true;
+        }
+
+        $validScheme = array_keys(self::$standardPort);
+        if (in_array($scheme, $validScheme)) {
+            return true;
+        }
+        return false;
     }
 
     protected function validatePort($scheme, $host, $port)

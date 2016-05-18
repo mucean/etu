@@ -34,7 +34,7 @@ class Uri implements UriInterface
         }
 
         if (!is_string($url)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 sprintf('build a uri instance need a url of string type, %s given', gettype($url))
             );
         }
@@ -160,53 +160,76 @@ class Uri implements UriInterface
 
     public function withHost($host)
     {
-        $this->host = strtolower($host);
+        if ($this->getHost() === $host) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->host = $host;
+        return $new;
     }
 
     public function withPort($port)
     {
-        $this->port = $this->normalizePort($this->scheme, $this->host, $port);
-        return $this;
+        if ($this->getPort() === $port) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->port = $new->normalizePort($new->scheme, $new->host, $port);
+        return $new;
     }
 
     public function withPath($path)
     {
-        if (DEBUG) {
-            if (!is_string($path) && !method_exists($path, '__toString')) {
-                throw new \InvalidArgumentException(
-                    'path argument must be a string'
-                );
-            }
+        if ($this->getPath() === $path) {
+            return $this;
         }
-        $this->path = $this->normalizePath($path);
-        return $this;
+
+        if (!is_string($path) && !method_exists($path, '__toString')) {
+            throw new InvalidArgumentException(
+                'path argument must be a string'
+            );
+        }
+
+        $new = clone $this;
+        $new->path = $new->normalizePath($path);
+        return $new;
     }
 
     public function withQuery($query)
     {
-        if (DEBUG) {
-            if (!is_string($query) && !method_exists($query, '__toString')) {
-                throw new \InvalidArgumentException(
-                    'query argument must be a string'
-                );
-            }
+        if ($this->getQuery() === $query) {
+            return $this;
         }
+
+        if (!is_string($query) && !method_exists($query, '__toString')) {
+            throw new InvalidArgumentException(
+                'query argument must be a string'
+            );
+        }
+
         if (strpos($query, '?') === 0) {
             $query = substr($query, 1);
         }
-        $this->query = $this->normalizeQueryAndFragment($query);
-        return $this;
+
+        $new = clone $this;
+        $new->query = $new->normalizeQueryAndFragment($query);
+        return $new;
     }
 
     public function withFragment($fragment)
     {
-        if (DEBUG) {
-            if (!is_string($fragment) && !method_exists($fragment, '__toString')) {
-                throw new \InvalidArgumentException(
-                    'fragment argument must be a string'
-                );
-            }
+        if ($this->getFragment() === $fragment) {
+            return $this;
         }
+
+        if (!is_string($fragment) && !method_exists($fragment, '__toString')) {
+            throw new InvalidArgumentException(
+                'fragment argument must be a string'
+            );
+        }
+
         if (strpos($fragment, '#') === 0) {
             $fragment = substr($fragment, 1);
         }
@@ -266,7 +289,7 @@ class Uri implements UriInterface
             throw new InvalidArgumentException('scheme of Uri must be a string');
         }
 
-        $scheme = str_replace('://', '', $scheme);
+        $scheme = strtolower(str_replace('://', '', $scheme));
         if (!$this->validateScheme($scheme)) {
             throw new InvalidArgumentException('scheme of Uri must be a valid value');
         }

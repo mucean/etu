@@ -23,6 +23,10 @@ class Uri implements UriInterface
     protected $query = false;
     protected $fragment = false;
 
+    /**
+     * @var string $url
+     * @return self
+     */
     public static function buildFromUrl($url = null)
     {
         if ($url === null) {
@@ -54,17 +58,9 @@ class Uri implements UriInterface
         $user = '',
         $pass = ''
     ) {
-        $scheme = $this->normalizeScheme($scheme);
-        if (!$this->validateScheme($scheme)) {
-            throw new InvalidArgumentException('scheme of Uri must be a valid value');
-        }
-        $this->scheme = $scheme;
+        $this->scheme = empty($scheme) ? '' : $this->normalizeScheme($scheme);
         $this->host = $host;
-        $port = $this->normalizePort($port);
-        if (!$this->validatePort($port)) {
-            throw new InvalidArgumentException('port of Uri must be a valid value');
-        }
-        $this->port = $port;
+        $this->port = $this->normalizePort($scheme, $host, $port);
         $this->path = empty($path) ? '' : $this->normalizePath($path);
         $this->query = empty($query) ? '' : $this->normalizeQueryAndFragment($query);
         $this->fragment = empty($fragment) ? '' : $this->normalizeQueryAndFragment($fragment);
@@ -141,19 +137,25 @@ class Uri implements UriInterface
         if ($scheme === $this->scheme) {
             return $this;
         }
-        $this->scheme = $scheme;
-        $this->port = $this->normalizePort($scheme, $this->host, $this->port);
-        return $this;
+
+        $new = clone $this;
+        $new->scheme = empty($scheme) ? '' : $new->normalizeScheme($scheme);
+        $new->port = null;
+        return $new;
     }
 
     public function withUserInfo($user, $password = null)
     {
-        $this->user = $user;
-        if ($password !== null) {
-            $this->pass = $password;
+        if ($this->user === $user && $this->pass === $password) {
+            return $this;
         }
 
-        return $this;
+        $new = clone $this;
+        $new->user = $user;
+        if ($password !== null) {
+            $new->pass = $password;
+        }
+        return $new;
     }
 
     public function withHost($host)
@@ -260,10 +262,16 @@ class Uri implements UriInterface
 
     protected function normalizeScheme($scheme)
     {
-        if (!is_string($scheme) || !method_exists($scheme, '__toString')) {
+        if (!is_string($scheme) || method_exists($scheme, '__toString')) {
             throw new InvalidArgumentException('scheme of Uri must be a string');
         }
-        return str_replace('://', '', $scheme);
+
+        $scheme = str_replace('://', '', $scheme);
+        if (!$this->validateScheme($scheme)) {
+            throw new InvalidArgumentException('scheme of Uri must be a valid value');
+        }
+
+        return $scheme;
     }
 
     protected function normalizePort($scheme, $host, $port)
@@ -275,7 +283,7 @@ class Uri implements UriInterface
         $port = (int) $port;
 
         if (1 > $port || $port > 65535) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 sprintf('Valid Port is between 1 and 65535, %d given', $port)
             );
         }
@@ -305,7 +313,7 @@ class Uri implements UriInterface
             return true;
         }
 
-        $validScheme = array_keys(self::$standardPort);
+        $validScheme = array_keys(static::$standardPort);
         if (in_array($scheme, $validScheme)) {
             return true;
         }

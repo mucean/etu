@@ -4,40 +4,63 @@ namespace Etu\Http;
 
 use Psr\Http\Message\UploadedFileInterface;
 use Etu\Stream;
+use InvalidArgumentException;
+use RuntimeException;
 
 class UploadedFile implements UploadedFileInterface
 {
-    protected $file;
+    protected $name;
+    protected $type;
+    protected $size;
+    protected $tmpName;
+    protected $error;
+    protected $sapi = false;
+
     protected $stream;
     protected $isMoved = false;
-    protected $targetPath;
-    public function __construct(array $file)
+
+    public static function buildFromContext()
     {
-        if (!isset($file['tmp_name'])) {
-            throw new \InvalidArgumentException('UploadedFile class need an array within tmp_name of $_FILES variate');
+        $files = [];
+        foreach ($_FILES as $name => $file) {
+            if (is_array($file['tmp_name'])) {
+                $files[$name] = [];
+            } else {
+                $files[$name] = new static(
+                    $file['tmp_name'],
+                    isset($file['name']) ? $file['name'] : null,
+                    isset($file['type']) ? $file['type'] : null,
+                    isset($file['size']) ? $file['size'] : null,
+                    isset($file['error']) ? $file['error'] : UPLOAD_ERR_OK,
+                    true
+                );
+            }
         }
+    }
 
-        if (!is_uploaded_file($file['tmp_name'])) {
-            throw new \InvalidArgumentException(sprintf('%s is not uploaded file', $file['tmp_name']));
-        }
-
-        if (!is_file($file['tmp_name'])) {
-            $this->isMoved = true;
-        }
-
-        $this->file = $file;
+    public function __construct(
+        $tmpName,
+        $name = null,
+        $type = null,
+        $size = null,
+        $error = UPLOAD_ERR_OK,
+        $sapi = false
+    ) {
+        $this->tmpName = $tmpName;
+        $this->name = $name;
+        $this->type = $type;
+        $this->size = $size;
+        $this->error = $error;
+        $this->sapi = $sapi;
     }
 
     public function getStream()
     {
         if ($this->isMoved) {
-            throw new \RuntimeException(sprintf(
-                'uploaded file was moved to %s directory',
-                $this->targetPath === null ? 'other' : $this->targetPath
-            ));
+            throw new RuntimeException(sprintf('uploaded file %s has been moved', $this->name));
         }
 
-        if (!$this->stream) {
+        if ($this->stream !== null) {
             $this->stream = new Stream(fopen($this->stream, 'r'));
         }
 
@@ -47,75 +70,54 @@ class UploadedFile implements UploadedFileInterface
     public function moveTo($targetPath)
     {
         if ($this->isMoved) {
-            throw new \RuntimeException(sprintf(
-                'uploaded file was moved to %s directory',
-                $this->targetPath === null ? 'other' : $this->targetPath
-            ));
+            throw new RuntimeException(sprintf('uploaded file %s has been moved', $this->name));
         }
+
         $targetDirName = dirname($targetPath);
-        if (!is_dir($targetDirName)) {
-            throw new \InvalidArgumentException(sprintf(
-                '%s is not a directory, uploaded file can not move to',
+        if (!is_writable($targetDirName)) {
+            throw new InvalidArgumentException(sprintf(
+                '%s is not a writable path, uploaded file can not move to',
                 $targetDirName
             ));
         }
 
-        if (!move_uploaded_file($this->file['tmp_name'], $targetPath)) {
-            throw new \RuntimeException('move uploaded file failed');
+        if (strpos($targetPath, '://') !== false) {
+            if (!copy($this->tmpName, $targetPath)) {
+                throw new RuntimeException('Occur error when moving file');
+            }
+            if (!unlink($this->tmpName)) {
+                throw new RuntimeException('Occur error when moving file');
+            }
+        } elseif ($this->sapi) {
+            if (!is_uploaded_file($tmpName)) {
+                throw new RuntimeException(sprintf('%s is not uploaded file', $tmpName));
+            }
+        } else {
+            if (!rename($this->tmpName, $targetPath)) {
+                throw new RuntimeException('Occur error when moving file');
+            }
         }
+
+        $this->isMoved = true;
     }
 
     public function getSize()
     {
-        return isset($this->file['size']) ? $this->file['size'] : null;
+        return $this->size;
     }
 
     public function getError()
     {
-        return $this->file['error'];
+        return $this->error;
     }
 
     public function getClientFilename()
     {
-        return isset($this->file['name']) ? $this->file['name'] : null;
+        return $this->name;
     }
 
     public function getClientMediaType()
     {
-        return isset($this->file['type']) ? $this->file['type'] : null;
-    }
-
-    public static function throwUploadFileException($code)
-    {
-        $message = '';
-
-        switch ($code) {
-            case UPLOAD_ERR_INI_SIZE:
-                $message = 'The uploaded file exceeds the upload_max_filesize directive in php.ini';
-                break;
-            case UPLOAD_ERR_FORM_SIZE:
-                $message = "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form";
-                break;
-            case UPLOAD_ERR_PARTIAL:
-                $message = "The uploaded file was only partially uploaded";
-                break;
-            case UPLOAD_ERR_NO_FILE:
-                $message = "No file was uploaded";
-                break;
-            case UPLOAD_ERR_NO_TMP_DIR:
-                $message = "Missing a temporary folder";
-                break;
-            case UPLOAD_ERR_CANT_WRITE:
-                $message = "Failed to write file to disk";
-                break;
-            case UPLOAD_ERR_EXTENSION:
-                $message = "File upload stopped by extension";
-                break;
-
-            default:
-                $message = "Unknown upload error";
-                break;
-        }
-        throw new \RuntimeException($message, $code);
+        return $this->type;
     }
 }

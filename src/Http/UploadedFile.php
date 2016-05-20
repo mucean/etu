@@ -21,21 +21,37 @@ class UploadedFile implements UploadedFileInterface
 
     public static function buildFromContext()
     {
-        $files = [];
-        foreach ($_FILES as $name => $file) {
-            if (is_array($file['tmp_name'])) {
-                $files[$name] = [];
+        return static::parseFiles($_FILES);
+    }
+
+    public static function parseFiles($files)
+    {
+        $parsedFiles = [];
+        foreach ($files as $name => $file) {
+            $parsedFiles[$name] = [];
+            if (!is_array($file['error'])) {
+                $parsedFiles[$name] = [
+                    'tmp_name' => $file['tmp_name'],
+                    'name' => $file['name'],
+                    'type' => $file['type'],
+                    'size' => $file['size'],
+                    'error' => $file['error']
+                ];
             } else {
-                $files[$name] = new static(
-                    $file['tmp_name'],
-                    isset($file['name']) ? $file['name'] : null,
-                    isset($file['type']) ? $file['type'] : null,
-                    isset($file['size']) ? $file['size'] : null,
-                    isset($file['error']) ? $file['error'] : UPLOAD_ERR_OK,
-                    true
-                );
+                $nextFiles = [];
+                $nextNames = array_keys($file['error']);
+                foreach ($nextNames as $nextName) {
+                    $nextFiles[$nextName]['tmp_name'] = $file['tmp_name'][$nextName];
+                    $nextFiles[$nextName]['name'] = $file['name'][$nextName];
+                    $nextFiles[$nextName]['type'] = $file['type'][$nextName];
+                    $nextFiles[$nextName]['size'] = $file['size'][$nextName];
+                    $nextFiles[$nextName]['error'] = $file['error'][$nextName];
+                }
+                $parsedFiles[$name] = otherFunc($nextFiles);
             }
         }
+
+        return $parsedFiles;
     }
 
     public function __construct(

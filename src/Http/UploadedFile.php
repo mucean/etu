@@ -30,13 +30,14 @@ class UploadedFile implements UploadedFileInterface
         foreach ($files as $name => $file) {
             $parsedFiles[$name] = [];
             if (!is_array($file['error'])) {
-                $parsedFiles[$name] = [
-                    'tmp_name' => $file['tmp_name'],
-                    'name' => $file['name'],
-                    'type' => $file['type'],
-                    'size' => $file['size'],
-                    'error' => $file['error']
-                ];
+                $parsedFiles[$name] = new UploadedFile(
+                    $file['tmp_name'],
+                    isset($file['name']) ? $file['name'] : '',
+                    isset($file['type']) ? $file['type'] : null,
+                    isset($file['size']) ? $file['size'] : null,
+                    isset($file['error']) ? $file['error'] : UPLOAD_ERR_OK,
+                    true
+                );
             } else {
                 $nextFiles = [];
                 $nextNames = array_keys($file['error']);
@@ -47,7 +48,7 @@ class UploadedFile implements UploadedFileInterface
                     $nextFiles[$nextName]['size'] = $file['size'][$nextName];
                     $nextFiles[$nextName]['error'] = $file['error'][$nextName];
                 }
-                $parsedFiles[$name] = otherFunc($nextFiles);
+                $parsedFiles[$name] = self::parseFiles($nextFiles);
             }
         }
 
@@ -76,8 +77,8 @@ class UploadedFile implements UploadedFileInterface
             throw new RuntimeException(sprintf('uploaded file %s has been moved', $this->name));
         }
 
-        if ($this->stream !== null) {
-            $this->stream = new Stream(fopen($this->stream, 'r'));
+        if ($this->stream === null) {
+            $this->stream = new Stream(fopen($this->tmpName, 'r'));
         }
 
         return $this->stream;
@@ -107,6 +108,9 @@ class UploadedFile implements UploadedFileInterface
         } elseif ($this->sapi) {
             if (!is_uploaded_file($tmpName)) {
                 throw new RuntimeException(sprintf('%s is not uploaded file', $tmpName));
+            }
+            if (!move_uploaded_file($tmpName, $targetPath)) {
+                throw new RuntimeException('Occur error when moving file');
             }
         } else {
             if (!rename($this->tmpName, $targetPath)) {

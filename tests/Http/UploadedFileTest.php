@@ -3,7 +3,6 @@
 namespace Tests\Http;
 
 use Etu\Http\UploadedFile;
-use Etu\Stream;
 
 class UploadedFileTest extends \PHPUnit_Framework_TestCase
 {

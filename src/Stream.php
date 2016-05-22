@@ -3,6 +3,8 @@
 namespace Etu;
 
 use Psr\Http\Message\StreamInterface;
+use InvalidArgumentException;
+use RuntimeException;
 
 class Stream implements StreamInterface
 {
@@ -11,7 +13,10 @@ class Stream implements StreamInterface
     protected $seekable;
     protected $readable;
     protected $writeable;
+    protected $metadata;
     protected $customMetadata;
+
+    protected $isAttached = false;
 
     private static $readWriteHash = [
         'read' => [
@@ -30,52 +35,63 @@ class Stream implements StreamInterface
 
     public function __construct($stream, $option = [])
     {
-        if (!is_resource($stream)) {
-            throw new \InvalidArgumentException('argument passed to Stream class must be a resource');
-        }
-        $this->stream = $stream;
-        if (isset($option['size'])) {
-            $this->size = $option['size'];
-        }
-
-        if (isset($option['metadata'])) {
-            $this->customMetadata = $option['metadata'];
-        }
-
-        $meta = stream_get_meta_data($this->stream);
-        $this->seekable = $meta['seekable'];
-        $this->readable = isset(self::$readWriteHash['read'][$meta['mode']]);
-        $this->writeable = isset(self::$readWriteHash['write'][$meta['mode']]);
+        $this->attach($stream, $option);
     }
 
     public function __toString()
     {
-        if (!isset($this->stream)) {
+        if (!$this->isAttached()) {
             return '';
         }
-        $this->seek(0);
-        return (string) stream_get_contents($this->stream);
+
+        try {
+            $this->seek(0);
+            return $this->getContents();
+        } catch (RuntimeException $e) {
+            return '';
+        }
     }
 
     public function close()
     {
-        if (is_resource($this->stream)) {
+        if ($this->isAttached()) {
             fclose($this->stream);
         }
         $this->detach();
     }
 
+    public function attach($stream, $option = [])
+    {
+        if (!is_resource($stream)) {
+            throw new InvalidArgumentException('argument passed to Stream class must be a resource');
+        }
+
+        $this->stream = $stream;
+        $this->isAttached = true;
+
+        if (isset($option['size'])) {
+            $this->size = $option['size'];
+        }
+
+        if (isset($option['customMetadata'])) {
+            $this->customMetadata = $option['customMetadata'];
+        }
+    }
+
+    protected function isAttached()
+    {
+        return (bool) $this->isAttached;
+    }
+
     public function detach()
     {
-        if (!isset($this->stream)) {
+        if (!$this->isAttached()) {
             return null;
         }
 
         $stream = $this->stream;
-        $this->stream = null;
-        $this->size = null;
-
-        $this->seekable = $this->readable = $this->writeable = false;
+        $this->stream = $this->size = $this->metadata = $this->customMetadata = null;
+        $this->isAttached = $this->seekable = $this->readable = $this->writeable = false;
 
         return $stream;
     }
@@ -86,7 +102,7 @@ class Stream implements StreamInterface
             return $this->size;
         }
 
-        if (!isset($this->stream)) {
+        if (!$this->isAttached()) {
             return null;
         }
 
@@ -94,22 +110,21 @@ class Stream implements StreamInterface
 
         if (isset($stats['size'])) {
             $this->size = $stats['size'];
-            return $this->size;
         }
 
-        return null;
+        return $this->size;
     }
 
     public function tell()
     {
-        if (!isset($this->stream)) {
-            throw $this->getDetachException();
+        if (!$this->isAttached()) {
+            throw new RuntimeException('source has been detached');
         }
 
         $position = ftell($this->stream);
 
         if ($position === false) {
-            throw new \RuntimeException('source can not tell you the position');
+            throw new RuntimeException('source can not tell you the position');
         }
 
         return $position;
@@ -117,22 +132,31 @@ class Stream implements StreamInterface
 
     public function eof()
     {
-        return !$this->stream && feof($this->stream);
+        return $this->isAttached() ? feof($this->stream) : true;
     }
 
     public function isSeekable()
     {
+        if ($this->seekable !== null) {
+            return $this->seekable;
+        }
+
+        $this->seekable = false;
+        if ($this->isAttached()) {
+            $this->seekable = $this->getMetadata('seekable');
+        }
+
         return $this->seekable;
     }
 
     public function seek($offset, $whence = SEEK_SET)
     {
-        if (!isset($this->stream) || !$this->seekable) {
-            throw $this->getDetachException();
+        if (!$this->isAttached() || !$this->isSeekable()) {
+            throw new RuntimeException('source can not be seeked');
         }
 
         if (fseek($this->stream, $offset, $whence) === -1) {
-            throw new \RuntimeException('Unable to seek to the position of source');
+            throw new RuntimeException('Unable to seek to the position of source');
         }
     }
 
@@ -143,18 +167,29 @@ class Stream implements StreamInterface
 
     public function isWritable()
     {
+        if ($this->writeable !== null) {
+            return $this->writeable;
+        }
+
+        $this->writeable = false;
+        if ($this->isAttached()) {
+            $metadata = $this->getMetadata();
+            $this->writeable = isset(self::$readWriteHash['write'][$metadata['mode']]);
+        }
+
         return $this->writeable;
     }
 
     public function write($string)
     {
-        if (!$this->writeable) {
-            throw new \RuntimeException('source is not writeable');
+        if (!$this->isWritable()) {
+            throw new RuntimeException('source is not writeable');
         }
-        $res = fwrite($this->stream, (string) $string);
+
+        $res = fwrite($this->stream, $string);
 
         if ($res === false) {
-            throw new \RuntimeException('write to source failed');
+            throw new RuntimeException('write to source failed');
         }
 
         return $res;
@@ -162,47 +197,60 @@ class Stream implements StreamInterface
 
     public function isReadable()
     {
+        if ($this->readable !== null) {
+            return $this->readable;
+        }
+
+        $this->readable = false;
+        if ($this->isAttached()) {
+            $metadata = $this->getMetadata();
+            $this->readable = isset(self::$readWriteHash['read'][$metadata['mode']]);
+        }
+
         return $this->readable;
     }
 
     public function read($length)
     {
-        if (!$this->stream) {
-            throw $this->getDetachException();
+        if (!$this->isReadable()) {
+            throw new RuntimeException('source is not readable');
         }
 
-        if (!$this->readable) {
-            throw new \RuntimeException('source is not readable');
+        $res = fread($this->stream, $length);
+
+        if ($res === false) {
+            throw new RuntimeException('read from source failed');
         }
-        return (string) fread($this->stream, $length);
+
+        return $res;
     }
 
     public function getContents()
     {
-        if (!$this->stream) {
-            throw $this->getDetachException();
+        if (!$this->isReadable() || ($data = stream_get_contents($this->stream)) === false) {
+            throw new RuntimeException('Could not get contents from stream');
         }
 
-        return (string) stream_get_contents($this->stream);
+        return $data;
     }
 
     public function getMetadata($key = null)
     {
-        if (!$this->stream) {
+        if (!$this->isAttached()) {
             return $key ? null : [];
         }
 
-        $meta = $this->customMetadata + stream_get_meta_data($this->stream);
-
-        if (!$key) {
-            return $meta;
+        if ($this->metadata === null) {
+            $this->metadata = stream_get_meta_data($this->stream);
+            if ($this->customMetadata !== null) {
+                $this->metadata += $this->customMetadata;
+            }
         }
 
-        return isset($meta[$key]) ? $meta[$key] : null;
-    }
+        if (!$key) {
+            return $this->metadata;
+        }
 
-    protected function getDetachException()
-    {
-        return new \RuntimeException('source has been detached');
+        return isset($this->metadata[$key]) ? $this->metadata[$key] : null;
     }
 }

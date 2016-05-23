@@ -13,13 +13,11 @@ class Request implements ServerRequestInterface
 {
     use MessageTrait;
 
-    protected $servers = [];
-    protected $cookies = [];
-    protected $get = [];
-    protected $post = [];
-    protected $files = [];
+    protected $servers;
+    protected $cookies;
     protected $uploadedFiles;
     protected $parsedBody = false;
+    protected $queryParams;
     protected $attributes = [];
     protected $requestTarget;
     protected $originalMethod;
@@ -29,15 +27,19 @@ class Request implements ServerRequestInterface
 
     protected $uri = null;
 
-    public function __construct()
-    {
-        $this->servers = $_SERVER;
-        $this->cookies = $_COOKIE;
+    public function __construct(
+        array $servers,
+        array $cookies,
+        UriInterface $uri,
+        array $uploadedFiles = []
+    ) {
+        $this->servers = $servers;
+        $this->cookies = $cookies;
+        $this->uri = $uri;
         $this->get = $_GET;
-        $this->post = $_POST;
-        $this->files = $_FILES;
+        $this->uploadedFiles = $uploadedFiles;
         $this->originalMethod = $this->servers['REQUEST_METHOD'];
-        $this->setHeaders(getallheaders());
+        $this->setHeaders(getallheaders($this->servers));
         if (!$this->hasHeader('host') && isset($_SERVER['SERVER_NAME'])) {
             $this->withHeader('Host', $_SERVER['SERVER_NAME']);
         }
@@ -66,8 +68,11 @@ class Request implements ServerRequestInterface
 
     public function getQueryParams()
     {
-        return $this->get;
-        /* if (isset($this->servers['QUERY_STRING'])) {
+        if ($this->queryParams !== null) {
+            return $this->queryParams;
+        }
+
+        if (isset($this->servers['QUERY_STRING'])) {
             $query = $this->servers['QUERY_STRING'];
         } else {
             if ($this->uri === null) {
@@ -76,34 +81,24 @@ class Request implements ServerRequestInterface
             $query = $this->uri->getQuery();
         }
 
-        if ($query === '') {
-            return [];
-        }
-        parse_str($query, $res);
-        return $res; */
+        parse_str($query, $this->queryParams);
+
+        return $this->queryParams;
     }
 
     public function withQueryParams(array $query)
     {
-        if ($this->get === $query) {
+        if ($this->queryParams === $query) {
             return $this;
         }
 
         $new = clone $this;
-        $new->get = $query;
+        $new->queryParams = $query;
         return $new;
     }
 
     public function getUploadedFiles()
     {
-        if ($this->uploadedFiles !== null) {
-            return $this->uploadedFiles;
-        }
-        $files = [];
-        foreach ($this->files as $file) {
-            $files[] = new UploadedFile($file);
-        }
-        $this->uploadedFiles = $files;
         return $this->uploadedFiles;
     }
 
@@ -120,13 +115,9 @@ class Request implements ServerRequestInterface
                 );
             }
         }
+
         $new = clone $this;
         $this->uploadedFiles = $uploadedFiles;
-        $new_files = [];
-        foreach ($uploadedFiles as $file) {
-            $new_files[] = $file->file;
-        }
-        $new->files = $new_files;
         return $new;
     }
 
@@ -136,13 +127,15 @@ class Request implements ServerRequestInterface
             return $this->parsedBody;
         }
 
-        if ($this->getMethod() === 'post') {
+        if ($this->originalMethod === 'post') {
             $contentType = strtolower($this->getHeaderLine('content_type'));
             if (strpos($contentType, 'application/x-www-form-urlencoded') !== false ||
                 strpos($contentType, 'multipart/form-data') !== false) {
-                return $this->parsedBody = $this->post;
+                return $this->parsedBody = $_POST;
             }
         }
+
+        // TODO need different function to unserize the request body
 
         $body = (string) $this->getBody();
 

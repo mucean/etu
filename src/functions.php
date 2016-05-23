@@ -1,12 +1,11 @@
 <?php
 
 if (!function_exists('getallheaders')) {
-    function getallheaders()
+    function getallheaders(array &$servers)
     {
         $headers = [];
-        foreach ($_SERVER as $name => $value) {
-            if (strpos($name, 'HTTP_') === 0) {
-            // if (substr($name, 0, 5) == 'HTTP_') {
+        foreach ($servers as $name => $value) {
+            if ($name !== 'HTTP_CONTENT_TYPE' && strpos($name, 'HTTP_') === 0) {
                 $headers[str_replace(
                     ' ',
                     '-',

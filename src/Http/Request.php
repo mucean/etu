@@ -215,6 +215,10 @@ class Request implements ServerRequestInterface
 
     public function getRequestTarget()
     {
+        if ($this->requestTarget !== null) {
+            return $this->requestTarget;
+        }
+
         if ($this->uri === null) {
             return '/';
         }

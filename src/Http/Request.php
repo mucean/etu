@@ -8,6 +8,7 @@ use Psr\Http\Message\UriInterface;
 use Etu\Stream;
 use InvalidArgumentException;
 use Closure;
+use Etu\Http\Uri;
 
 class Request implements ServerRequestInterface
 {
@@ -29,10 +30,13 @@ class Request implements ServerRequestInterface
 
     protected $uri;
 
-    public static function buildFromContext()
+    public static function buildFromContext(Context $context)
     {
         $bodyStream = fopen('php://input', 'r');
         $bodyStream = new Stream($bodyStream);
+        $uri = Uri::buildFromContext($context);
+        $uploadedFiles = UploadedFile::buildFromContext();
+        return new static($context->all(), $_COOKIE, $bodyStream, $uri, $uploadedFiles);
     }
 
     public function __construct(

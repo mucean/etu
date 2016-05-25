@@ -4,6 +4,7 @@ namespace Etu\Http;
 
 use Psr\Http\Message\UriInterface;
 use InvalidArgumentException;
+use Etu\Http\Context;
 
 class Uri implements UriInterface
 {
@@ -48,12 +49,47 @@ class Uri implements UriInterface
         return new static($scheme, $host, $port, $path, $query, $fragment, $user, $pass);
     }
 
-    public static function buildFromContext()
+    public static function buildFromContext(Context $context)
     {
         $scheme = 'http';
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        if ($context->has('HTTPS') && $context->get('HTTPS') !== 'off') {
             $scheme = 'https';
         }
+
+        $host = '';
+        if ($context->has('HTTP_HOST')) {
+            $host = $context->get('HTTP_HOST');
+        } elseif ($context->has('SERVER_NAME')) {
+            $host = $context->get('SERVER_NAME');
+        }
+
+        $port = $context->get('SERVER_PORT');
+
+        $pos = strpos($host, ':');
+        if ($pos !== false) {
+            $port = (int) substr($host, $pos + 1);
+            $host = substr($host, 0, $pos);
+        }
+
+        $requestUri = $context->get('REQUEST_URI');
+        if ($requestUri) {
+            $pos = strpos($requestUri, '?');
+            if ($pos !== false) {
+                $path = substr($requestUri, 0, $pos);
+            } else {
+                $path = $requestUri;
+            }
+        } else {
+            $path = $context->get('SCRIPT_NAME', '');
+        }
+
+        $query = $context->get('QUERY_STRING', '');
+        $fragment = '';
+
+        $user = $context->get('PHP_AUTH_USER', '');
+        $pass = $context->get('PHP_AUTH_PW', '');
+
+        return new static($scheme, $host, $port, $path, $query, $fragment, $user, $pass);
     }
 
     public function __construct(

@@ -8,9 +8,9 @@ trait MessageTrait
 {
     private $protocol = '1.1';
 
-    private $stram;
-
     protected $headers = [];
+
+    protected $body;
 
     protected $headerLines = [];
 

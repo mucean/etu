@@ -3,11 +3,11 @@
 namespace Etu\Http;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
-use Etu\Http\Uri;
-use Etu\Http\UploadedFile;
 use Etu\Stream;
 use InvalidArgumentException;
+use Closure;
 
 class Request implements ServerRequestInterface
 {
@@ -23,26 +23,67 @@ class Request implements ServerRequestInterface
     protected $originalMethod;
     protected $method;
 
+    protected $mediaType = [];
+
     protected $validMethod = ['GET', 'POST', 'PUT', 'DELETE', 'CONNECT', 'HEAD', 'OPTIONS', 'PATCH', 'TRACE'];
 
-    protected $uri = null;
+    protected $uri;
+
+    public static function buildFromContext()
+    {
+        $bodyStream = fopen('php://input', 'r');
+        $bodyStream = new Stream($bodyStream);
+    }
 
     public function __construct(
         array $servers,
         array $cookies,
+        StreamInterface $body,
         UriInterface $uri,
         array $uploadedFiles = []
     ) {
         $this->servers = $servers;
         $this->cookies = $cookies;
+        $this->body = $body;
         $this->uri = $uri;
-        $this->get = $_GET;
         $this->uploadedFiles = $uploadedFiles;
         $this->originalMethod = $this->servers['REQUEST_METHOD'];
         $this->setHeaders(getallheaders($this->servers));
         if (!$this->hasHeader('host') && isset($_SERVER['SERVER_NAME'])) {
             $this->withHeader('Host', $_SERVER['SERVER_NAME']);
         }
+
+        if (isset($this->servers['SERVER_PROTOCOL'])) {
+            $this->protocol = substr($this->servers['SERVER_PROTOCOL'], 5);
+        }
+
+        $this->addMediaTypeParser('multipart/form-data', function ($body) {
+            parse_str($body, $data);
+            return $data;
+        });
+
+        $this->addMediaTypeParser('application/x-www-form-urlencoded', function ($body) {
+            parse_str($body, $data);
+            return $data;
+        });
+
+        $this->addMediaTypeParser('application/json', function ($body) {
+            return json_decode($body, true);
+        });
+
+        $this->addMediaTypeParser('application/xml', function ($body) {
+            $backup = libxml_disable_entity_loader(true);
+            $result = simplexml_load_string($body);
+            libxml_disable_entity_loader($backup);
+            return $result;
+        });
+
+        $this->addMediaTypeParser('text/xml', function ($body) {
+            $backup = libxml_disable_entity_loader(true);
+            $result = simplexml_load_string($body);
+            libxml_disable_entity_loader($backup);
+            return $result;
+        });
     }
 
     public function getServerParams()
@@ -76,7 +117,7 @@ class Request implements ServerRequestInterface
             $query = $this->servers['QUERY_STRING'];
         } else {
             if ($this->uri === null) {
-                $this->uri = $this->getRequestUri();
+                $this->uri = $this->getUri();
             }
             $query = $this->uri->getQuery();
         }
@@ -135,20 +176,13 @@ class Request implements ServerRequestInterface
             }
         }
 
-        // TODO need different function to unserize the request body
-
-        $body = (string) $this->getBody();
-
-        if ($body === '') {
-            return $this->parsedBody = null;
+        $this->parsedBody = null;
+        $mediaType = $this->getMediaType();
+        if (isset($this->mediaType[$mediaType])) {
+            $this->parsedBody = $this->mediaType[$mediaType]($this->getBody());
         }
 
-        $parseBody = json_decode($body, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            return $parseBody;
-        }
-
-        return null;
+        return $this->parsedBody;
     }
 
     public function withParsedBody($data)
@@ -157,24 +191,15 @@ class Request implements ServerRequestInterface
             return $this;
         }
 
-        if (!is_array($data) || !is_null($data)) {
+        if (!is_array($data) && !is_null($data) && !is_object($data)) {
             throw new \InvalidArgumentException(
-                'Argument $data must be a array or null parsed from getParsedBody method'
+                'Parsed body must be an array type, an object type or null'
             );
         }
 
         $new = clone $this;
 
-        if (is_array($data)) {
-            $contentType = $this->getHeaderLine('content_type');
-            if ($contentType === 'application/x-www-form-urlencoded' || $contentType === 'multipart/form-data') {
-                return $new->post = $data;
-            }
-            $body = json_encode($data, JSON_UNESCAPED_UNICODE);
-            $new = $new->withBody($body);
-        } else {
-            $new = $new->withBody(new Stream());
-        }
+        $new->parsedBody = $data;
 
         return $new;
     }
@@ -290,38 +315,7 @@ class Request implements ServerRequestInterface
 
     public function getUri()
     {
-        if ($this->uri !== null) {
-            return $this->uri;
-        }
-        $uri = new Uri;
-        $servers = &$this->servers;
-        $uri->withScheme(!empty($servers['HTTPS'] && $servers['HTTPS'] == 'on' ? 'https' : 'http'));
-        $uri->withHost(!empty($servers['SERVER_NAME'])
-            ? $servers['SERVER_NAME']
-            : $this->hasHeader('host') ? $this->getHeader('host') : '');
-        $uri->withPort(!empty($servers['SERVER_PORT']) ? $servers['SERVER_PORT'] : null);
-
-        $path = $query = '';
-        if (!empty($servers['REQUEST_URI'])) {
-            $requestUri = $servers['REQUEST_URI'];
-            if (($pos = strpos($requestUri, '?')) !== false) {
-                $path = substr($requestUri, 0, $pos);
-                $query = substr($requestUri, $pos + 1);
-            } else {
-                $path = $requestUri;
-                $query = '';
-            }
-        } else {
-            $path = $servers['PHP_SELF'];
-            if (isset($servers['argv'])) {
-                $query = $servers['argv'][0];
-            } elseif (isset($servers['QUERY_STRING'])) {
-                $query = $servers['QUERY_STRING'];
-            }
-        }
-        $uri->withPath($path);
-        $uri->withQuery($query);
-        return $this->uri = $uri;
+        return $this->uri;
     }
 
     public function withUri(UriInterface $uri, $preserveHost = false)
@@ -339,5 +333,32 @@ class Request implements ServerRequestInterface
             }
             $this->withHeader('Host', $host);
         }
+    }
+
+    public function getContentType()
+    {
+        $contentType = $this->getHeader('content_type');
+        return $contentType ? $contentType[0] : null;
+    }
+
+    public function getMediaType()
+    {
+        $contentType = $this->getContentType();
+
+        $mediaType = null;
+        if ($contentType) {
+            $contentTypeParts = preg_split('/\s*[;,]\s*/', $contentType);
+            $mediaType = $contentTypeParts[0];
+        }
+
+        return $mediaType;
+    }
+
+    public function addMediaTypeParser($type, callable $parser)
+    {
+        if ($parser instanceof Closure) {
+            $parser = $parser->bindTo($this, $this);
+        }
+        $this->mediaType[(string) $type] = $parser;
     }
 }

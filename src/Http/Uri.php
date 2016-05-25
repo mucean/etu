@@ -30,7 +30,7 @@ class Uri implements UriInterface
     public static function buildFromUrl($url = null)
     {
         if ($url === null) {
-            return $this;
+            return null;
         }
 
         if (!is_string($url)) {
@@ -46,6 +46,14 @@ class Uri implements UriInterface
         }
         extract($component);
         return new static($scheme, $host, $port, $path, $query, $fragment, $user, $pass);
+    }
+
+    public static function buildFromContext()
+    {
+        $scheme = 'http';
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            $scheme = 'https';
+        }
     }
 
     public function __construct(

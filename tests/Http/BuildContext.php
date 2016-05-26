@@ -44,8 +44,9 @@ class BuildContext
         'test' => ['hi' => 'hello']
     ];
 
-    public static function getContext()
+    public static function getContext(array $context = [])
     {
-        return new Context(static::$context);
+        $context = array_merge(static::$context, $context);
+        return new Context($context);
     }
 }

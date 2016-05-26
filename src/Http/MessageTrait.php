@@ -21,10 +21,10 @@ trait MessageTrait
 
     public function withProtocolVersion($version)
     {
-        if ($this->protocol !== $version) {
-            $this->protocol = $version;
-        }
-        return $this;
+        $new = clone $this;
+        $this->validateProtocol($version);
+        $new->protocol = $version;
+        return $new;
     }
 
     public function getHeaders()
@@ -51,61 +51,63 @@ trait MessageTrait
 
     public function withHeader($name, $value)
     {
-        if (!is_string($name)) {
-            throw new \InvalidArgumentException(
-                'header name must be a string when use withHeader function set a header'
+        if (!is_string($name) || method_exists($name, '__toString')) {
+            throw new InvalidArgumentException(
+                'header name must be a string or has __toString function when use withHeader function set a header'
             );
         }
 
-        $name = trim($name);
-        $headerName = strtolower($name);
+        $name = trim((string) $name);
 
-        $this->headers[$headerName] = $this->normalizeHeaderValue($value);
+        $new = clone $this;
 
-        $this->syncHeaderLines($name);
+        $new->headers[strtolower($name)] = $new->normalizeHeaderValue($value);
 
-        return $this;
+        $new->syncHeaderLines($name);
+
+        return $new;
     }
 
     public function withAddedHeader($name, $value)
     {
-        if (!is_string($name)) {
-            throw new \InvalidArgumentException(
-                'header name must be a string when use withHeader function set a header'
+        if (!is_string($name) || method_exists($name, '__toString')) {
+            throw new InvalidArgumentException(
+                'header name must be a string or has __toString function when use withHeader function set a header'
             );
         }
 
-        $name = trim($name);
+        $name = trim((string) $name);
         $headerName = strtolower($name);
-        if ($this->hasHeader($name)) {
+        $new = clone $this;
+
+        if ($new->hasHeader($name)) {
+            $header = $new->getHeader($name);
             if (is_array($value)) {
                 foreach ($value as $eachValue) {
-                    if (!in_array($eachValue, $this->getHeader($name))) {
-                        $this->headers[$headerName][] = trim($value);
+                    if (!in_array($eachValue, $header)) {
+                        $new->headers[$headerName][] = trim($value);
                     }
                 }
             } else {
-                if (!in_array($value, $this->getHeader($name))) {
-                    $this->headers[$headerName][] = trim($value);
+                if (!in_array($value, $header)) {
+                    $new->headers[$headerName][] = trim($value);
                 }
             }
         } else {
-            $this->headers[$headerName] = $this->normalizeHeaderValue($value);
+            $new->headers[$headerName] = $new->normalizeHeaderValue($value);
         }
 
-        $this->syncHeaderLines($name);
+        $new->syncHeaderLines($name);
 
-        return $this;
+        return $new;
     }
 
     public function withoutHeader($name)
     {
-        if (!$this->hasHeader($name)) {
-            return $this;
-        }
-        unset($this->headers[strtolower($name)]);
-        $this->syncHeaderLines($name);
-        return $this;
+        $new = clone $this;
+        unset($new->headers[strtolower($name)]);
+        $new->syncHeaderLines($name);
+        return $new;
     }
 
     public function getBody()
@@ -115,10 +117,21 @@ trait MessageTrait
 
     public function withBody(StreamInterface $body)
     {
-        if ($body !== $this->body) {
-            $this->body = $body;
-        }
+        $new = clone $this;
+        $new->body = $body;
         return $this->body;
+    }
+
+    protected function validateProtocol($protocol)
+    {
+        $validProtocol = ['1.1', '1.0', '2.0'];
+
+        if (!in_array($protocol, $validProtocol)) {
+            throw new InvalidArgumentException(sprintf(
+                'protocol must be one of them, %s',
+                implode(', ', $validProtocol)
+            ));
+        }
     }
 
     protected function normalizeHeaderValue($value)
@@ -126,7 +139,7 @@ trait MessageTrait
         if (is_array($value)) {
             foreach ($value as &$eachValue) {
                 if (is_array($eachValue)) {
-                    throw new \InvalidArgumentException(
+                    throw new InvalidArgumentException(
                         'header value must be an type can be convert to string'
                     );
                 }
@@ -144,6 +157,7 @@ trait MessageTrait
         foreach (array_keys($this->headerLines) as $key) {
             if ($headerName === strtolower($key)) {
                 unset($this->headers[$key]);
+                break;
             }
         }
 

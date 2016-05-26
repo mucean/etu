@@ -103,10 +103,6 @@ class Request implements ServerRequestInterface
 
     public function withCookieParams(array $cookies)
     {
-        if ($this->cookies === $cookies) {
-            return $this;
-        }
-
         $new = clone $this;
         $new->cookies = $cookies;
         return $new;
@@ -134,10 +130,6 @@ class Request implements ServerRequestInterface
 
     public function withQueryParams(array $query)
     {
-        if ($this->queryParams === $query) {
-            return $this;
-        }
-
         $new = clone $this;
         $new->queryParams = $query;
         return $new;
@@ -150,10 +142,6 @@ class Request implements ServerRequestInterface
 
     public function withUploadedFiles(array $uploadedFiles)
     {
-        if ($this->uploadedFiles === $uploadedFiles) {
-            return $this;
-        }
-
         foreach ($uploadedFiles as $file) {
             if (!$file instanceof UploadedFile) {
                 throw new \InvalidArgumentException(
@@ -192,10 +180,6 @@ class Request implements ServerRequestInterface
 
     public function withParsedBody($data)
     {
-        if ($this->getParsedBody() === $data) {
-            return $this;
-        }
-
         if (!is_array($data) && !is_null($data) && !is_object($data)) {
             throw new \InvalidArgumentException(
                 'Parsed body must be an array type, an object type or null'
@@ -223,10 +207,6 @@ class Request implements ServerRequestInterface
 
     public function withAttribute($name, $value)
     {
-        if ($this->getAttribute($name) === $value) {
-            return $this;
-        }
-
         $new = clone $this;
         $new->attributes[$name] = $value;
         return $new;
@@ -234,10 +214,6 @@ class Request implements ServerRequestInterface
 
     public function withoutAttribute($name)
     {
-        if (!isset($this->attributes[$name])) {
-            return $this;
-        }
-
         $new = clone $this;
         unset($new->attributes[$name]);
         return $new;
@@ -263,10 +239,6 @@ class Request implements ServerRequestInterface
 
     public function withRequestTarget($requestTarget)
     {
-        if ($this->requestTarget === $requestTarget) {
-            return $this;
-        }
-
         $new = clone $this;
         $new->requestTarget = $requestTarget;
 
@@ -291,10 +263,6 @@ class Request implements ServerRequestInterface
 
     public function withMethod($method)
     {
-        if ($this->method === $method) {
-            return $this;
-        }
-
         $method = $this->filterMethod($method);
 
         $new = clone $this;
@@ -325,10 +293,6 @@ class Request implements ServerRequestInterface
 
     public function withUri(UriInterface $uri, $preserveHost = false)
     {
-        if ($this->uri === $uri) {
-            return $this;
-        }
-
         $this->uri = $uri;
 
         $host = $uri->getHost();

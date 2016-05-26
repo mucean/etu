@@ -7,3 +7,5 @@ if (!is_file(__DIR__ . DIRECTORY_SEPARATOR . '../vendor/autoload.php')) {
 defined('TEST') || define('TEST', true);
 
 require_once(__DIR__ . DIRECTORY_SEPARATOR . '../vendor/autoload.php');
+
+\Etu\Application::registerNamespace(__DIR__, '\\Tests');

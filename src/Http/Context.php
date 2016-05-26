@@ -47,7 +47,7 @@ class Context implements \ArrayAccess, \Countable
 
     public function merge(array $data)
     {
-        array_merge($this->context, $data);
+        $this->context = array_merge($this->context, $data);
     }
 
     public function offsetExists($offset)
@@ -55,9 +55,9 @@ class Context implements \ArrayAccess, \Countable
         return $this->has($offset);
     }
 
-    public function offsetGet($offset)
+    public function &offsetGet($offset)
     {
-        return $this->get($offset);
+        return $this->context[$offset];
     }
 
     public function offsetSet($offset, $value)

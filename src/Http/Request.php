@@ -9,6 +9,7 @@ use Etu\Stream;
 use InvalidArgumentException;
 use Closure;
 use Etu\Http\Uri;
+use Etu\Http\Context;
 
 class Request implements ServerRequestInterface
 {

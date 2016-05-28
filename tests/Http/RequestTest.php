@@ -31,4 +31,15 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($_COOKIE, $request->getCookieParams());
         $this->assertEquals([], $request->getCookieParams());
     }
+
+    /**
+     * @depends testBuildFromContext
+     */
+    public function testWithCookieParams(Request $request)
+    {
+        $newCookie = ['hi' => 'hello, world!'];
+        $newRequest = $request->withCookieParams($newCookie);
+        $this->assertNotSame($newRequest, $request);
+        $this->assertEquals($newCookie, $newRequest->getCookieParams());
+    }
 }

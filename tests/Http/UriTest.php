@@ -48,7 +48,7 @@ class UriTest extends \PHPUnit_Framework_TestCase
     public function testWithHost()
     {
         $new_uri = $this->uri->withHost('www.google.com');
-        $this->assertEquals($new_uri, $this->uri);
+        $this->assertNotSame($new_uri, $this->uri);
 
         $new_uri = $this->uri->withHost('www.Baidu.com');
         $this->assertInstanceOf('Etu\Http\Uri', $new_uri);
@@ -58,7 +58,7 @@ class UriTest extends \PHPUnit_Framework_TestCase
     public function testWithPort()
     {
         $new_uri = $this->uri->withPort(null);
-        $this->assertEquals($new_uri, $this->uri);
+        $this->assertNotSame($new_uri, $this->uri);
 
         $new_uri = $this->uri->withPort(8080);
         $this->assertInstanceOf('Etu\Http\Uri', $new_uri);
@@ -72,7 +72,7 @@ class UriTest extends \PHPUnit_Framework_TestCase
     public function testWithPath()
     {
         $new_uri = $this->uri->withPath('/test/api');
-        $this->assertSame($this->uri, $new_uri);
+        $this->assertNotSame($this->uri, $new_uri);
 
         $this->setExpectedException('InvalidArgumentException', 'path argument must be a string');
         $this->uri->withPath(12345);
@@ -88,7 +88,7 @@ class UriTest extends \PHPUnit_Framework_TestCase
     public function testWithQuery()
     {
         $new_uri = $this->uri->withQuery($this->uri->getQuery());
-        $this->assertSame($this->uri, $new_uri);
+        $this->assertNotSame($this->uri, $new_uri);
 
         $this->setExpectedException('InvalidArgumentException', 'query argument must be a string');
         $this->uri->withQuery(12345);
@@ -104,7 +104,7 @@ class UriTest extends \PHPUnit_Framework_TestCase
     public function testWithFragment()
     {
         $new_uri = $this->uri->withFragment($this->uri->getFragment());
-        $this->assertSame($this->uri, $new_uri);
+        $this->assertNotSame($this->uri, $new_uri);
 
         $this->setExpectedException('InvalidArgumentException', 'fragment argument must be a string');
         $this->uri->withFragment(12345);

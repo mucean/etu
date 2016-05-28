@@ -178,9 +178,6 @@ class Uri implements UriInterface
     public function withScheme($scheme)
     {
         $scheme = trim(strtolower($scheme));
-        if ($scheme === $this->scheme) {
-            return $this;
-        }
 
         $new = clone $this;
         $new->scheme = empty($scheme) ? '' : $new->normalizeScheme($scheme);
@@ -190,10 +187,6 @@ class Uri implements UriInterface
 
     public function withUserInfo($user, $password = null)
     {
-        if ($this->user === $user && $this->pass === $password) {
-            return $this;
-        }
-
         $new = clone $this;
         $new->user = $user;
         if ($password !== null) {
@@ -204,10 +197,6 @@ class Uri implements UriInterface
 
     public function withHost($host)
     {
-        if ($this->getHost() === $host) {
-            return $this;
-        }
-
         $new = clone $this;
         $new->host = $host;
         return $new;
@@ -215,10 +204,6 @@ class Uri implements UriInterface
 
     public function withPort($port)
     {
-        if ($this->getPort() === $port) {
-            return $this;
-        }
-
         $new = clone $this;
         $new->port = $new->normalizePort($new->scheme, $new->host, $port);
         return $new;
@@ -226,10 +211,6 @@ class Uri implements UriInterface
 
     public function withPath($path)
     {
-        if ($this->getPath() === $path) {
-            return $this;
-        }
-
         if (!is_string($path) && !method_exists($path, '__toString')) {
             throw new InvalidArgumentException(
                 'path argument must be a string'
@@ -243,10 +224,6 @@ class Uri implements UriInterface
 
     public function withQuery($query)
     {
-        if ($this->getQuery() === $query) {
-            return $this;
-        }
-
         if (!is_string($query) && !method_exists($query, '__toString')) {
             throw new InvalidArgumentException(
                 'query argument must be a string'
@@ -264,10 +241,6 @@ class Uri implements UriInterface
 
     public function withFragment($fragment)
     {
-        if ($this->getFragment() === $fragment) {
-            return $this;
-        }
-
         if (!is_string($fragment) && !method_exists($fragment, '__toString')) {
             throw new InvalidArgumentException(
                 'fragment argument must be a string'
@@ -278,8 +251,9 @@ class Uri implements UriInterface
             $fragment = substr($fragment, 1);
         }
 
-        $this->fragment = $this->normalizeQueryAndFragment($fragment);
-        return $this;
+        $new = clone $this;
+        $new->fragment = $new->normalizeQueryAndFragment($fragment);
+        return $new;
     }
 
     public function __toString()

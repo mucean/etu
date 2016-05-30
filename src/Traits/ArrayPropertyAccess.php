@@ -37,19 +37,15 @@ trait ArrayPropertyAccess
         }
 
         $data = &$this->$propertyName;
-        $lastPath = &$data;
 
         foreach ($accessPath as $path) {
-            if (isset($data[$path])) {
-                $data = &$data[$path];
-            } else {
+            if (!isset($data[$path])) {
                 $data[$path] = [];
-                $data = &$data[$path];
             }
-            $lastPath = &$data[$path];
+            $data = &$data[$path];
         }
 
-        $lastPath[$path] = $value;
+        $data = $value;
     }
 
     public function has($propertyName, array $accessPath)
@@ -80,18 +76,18 @@ trait ArrayPropertyAccess
         }
 
         $data = &$this->$propertyName;
-        $lastPath = &$data;
+        $lastKey = array_pop($accessPath);
 
         foreach ($accessPath as $path) {
-            if (isset($data[$path])) {
-                $data = &$data[$path];
-            } else {
+            if (!isset($data[$path])) {
                 return true;
             }
-            $lastPath = &$data[$path];
+            $data = &$data[$path];
         }
 
-        unset($lastPath[$path]);
+        if (isset($data[$lastKey])) {
+            unset($data[$lastKey]);
+        }
         return true;
     }
 
@@ -110,7 +106,7 @@ trait ArrayPropertyAccess
 
         if (!isset($this->accessProperties[$propertyName])) {
             if ($throwException) {
-                throw new InvalidArgumentException(sprintf('%s is not register to access'));
+                throw new InvalidArgumentException(sprintf('%s is not register to access', $propertyName));
             } else {
                 return 1;
             }
@@ -133,7 +129,7 @@ trait ArrayPropertyAccess
 
     protected function registerPropertyAccess($propertyName, $modifyPermission = false)
     {
-        if (!isset($this->$propertyName) && !is_array($this->$propertyName)) {
+        if (!isset($this->$propertyName) || !is_array($this->$propertyName)) {
             throw new InvalidArgumentException('the property must be existed and an array type');
         }
 

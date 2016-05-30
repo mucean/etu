@@ -42,4 +42,32 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertNotSame($newRequest, $request);
         $this->assertEquals($newCookie, $newRequest->getCookieParams());
     }
+
+    /**
+     * @depends testBuildFromContext
+     */
+    public function testGetQueryParams(Request $request)
+    {
+        $_GET = ['aa' => 'bb', 'cc' => ['dd', 'ee']];
+        $this->assertEquals($_GET, $request->getQueryParams());
+    }
+
+    /**
+     * @depends testBuildFromContext
+     */
+    public function testWithQueryParams(Request $request)
+    {
+        $testQueryParams = ['hi' => 'Hello, world!'];
+        $newRequest = $request->withQueryParams($testQueryParams);
+        $this->assertNotSame($request, $newRequest);
+        $this->assertEquals($newRequest->getQueryParams(), $testQueryParams);
+    }
+
+    /**
+     * @depends testBuildFromContext
+     */
+    public function testGetUploadedFiles(Request $request)
+    {
+        $this->assertEquals([], $request->getUploadedFiles());
+    }
 }

@@ -3,10 +3,11 @@
 namespace Etu\Http;
 
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\MessageInterface;
 
-trait MessageTrait
+abstract class Message implements MessageInterface
 {
-    private $protocol = '1.1';
+    protected $protocol = '1.1';
 
     protected $headers = [];
 
@@ -166,7 +167,7 @@ trait MessageTrait
         }
     }
 
-    private function setHeaders(array $headers)
+    protected function setHeaders(array $headers)
     {
         $this->headerLines = $this->headers = [];
         foreach ($headers as $name => $value) {

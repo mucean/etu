@@ -5,16 +5,15 @@ namespace Etu\Http;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
+use Etu\Http\Message;
 use Etu\Stream;
 use InvalidArgumentException;
 use Closure;
 use Etu\Http\Uri;
 use Etu\Http\Context;
 
-class Request implements ServerRequestInterface
+class Request extends Message implements ServerRequestInterface
 {
-    use MessageTrait;
-
     protected $servers;
     protected $cookies;
     protected $uploadedFiles;

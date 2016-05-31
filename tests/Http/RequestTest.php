@@ -6,6 +6,16 @@ use Etu\Http\Request;
 
 class RequestTest extends \PHPUnit_Framework_TestCase
 {
+    protected $uploadedFiles;
+
+    public function __construct()
+    {
+        $uploadedFileTest = new UploadedFileTest;
+        $testFile = $uploadedFileTest->contextProvider()[0];
+        $_FILES = $testFile[0];
+        $this->uploadedFiles = $testFile[1];
+    }
+
     public function testBuildFromContext()
     {
         $context = BuildContext::getContext();
@@ -68,6 +78,28 @@ class RequestTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetUploadedFiles(Request $request)
     {
-        $this->assertEquals([], $request->getUploadedFiles());
+        $this->assertEquals($this->uploadedFiles, $request->getUploadedFiles());
+    }
+
+    /**
+     * @dataProvider requestProvider
+     */
+    public function testGetParsedBody($request, $expect)
+    {
+        $this->assertEquals($request->getParsedBody(), $expect);
+    }
+
+    public function requestProvider()
+    {
+        return [
+            [
+                Request::buildFromContext(BuildContext::getContext(['REQUEST_METHOD' => 'GET'])),
+                []
+            ],
+            [
+                Request::buildFromContext(BuildContext::getContext(['REQUEST_METHOD' => 'POST'])),
+                []
+            ]
+        ];
     }
 }

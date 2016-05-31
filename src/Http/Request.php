@@ -11,9 +11,12 @@ use InvalidArgumentException;
 use Closure;
 use Etu\Http\Uri;
 use Etu\Http\Context;
+use Etu\Traits\ArrayPropertyAccess;
 
 class Request extends Message implements ServerRequestInterface
 {
+    use ArrayPropertyAccess;
+
     protected $servers;
     protected $cookies;
     protected $uploadedFiles;
@@ -32,7 +35,8 @@ class Request extends Message implements ServerRequestInterface
 
     public static function buildFromContext(Context $context)
     {
-        $bodyStream = fopen('php://input', 'r');
+        $bodyStream = fopen('php://temp', 'w+');
+        stream_copy_to_stream(fopen('php://input', 'r'), $bodyStream);
         $bodyStream = new Stream($bodyStream);
         $uri = Uri::buildFromContext($context);
         $uploadedFiles = UploadedFile::buildFromContext();
@@ -61,6 +65,7 @@ class Request extends Message implements ServerRequestInterface
             $this->protocol = substr($this->servers['SERVER_PROTOCOL'], 5);
         }
 
+        // add body type parser
         $this->addMediaTypeParser('multipart/form-data', function ($body) {
             parse_str($body, $data);
             return $data;
@@ -88,6 +93,8 @@ class Request extends Message implements ServerRequestInterface
             libxml_disable_entity_loader($backup);
             return $result;
         });
+
+        $this->registerPropertyAccess('servers');
     }
 
     public function getServerParams()

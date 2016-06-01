@@ -5,7 +5,7 @@ if (!function_exists('getallheaders')) {
     {
         $headers = [];
         foreach ($servers as $name => $value) {
-            if ($name !== 'HTTP_CONTENT_TYPE' && strpos($name, 'HTTP_') === 0) {
+            if (strpos($name, 'HTTP_') === 0) {
                 $headers[str_replace(
                     ' ',
                     '-',

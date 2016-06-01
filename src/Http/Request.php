@@ -8,6 +8,7 @@ use Psr\Http\Message\UriInterface;
 use Etu\Http\Message;
 use Etu\Stream;
 use InvalidArgumentException;
+use RuntimeException;
 use Closure;
 use Etu\Http\Uri;
 use Etu\Http\Context;
@@ -167,8 +168,8 @@ class Request extends Message implements ServerRequestInterface
             return $this->parsedBody;
         }
 
-        if ($this->originalMethod === 'post') {
-            $contentType = strtolower($this->getHeaderLine('content_type'));
+        if (strtolower($this->originalMethod) === 'post') {
+            $contentType = strtolower($this->getHeaderLine('content-type'));
             if (strpos($contentType, 'application/x-www-form-urlencoded') !== false ||
                 strpos($contentType, 'multipart/form-data') !== false) {
                 return $this->parsedBody = $_POST;
@@ -177,8 +178,14 @@ class Request extends Message implements ServerRequestInterface
 
         $this->parsedBody = null;
         $mediaType = $this->getMediaType();
-        if (isset($this->mediaType[$mediaType])) {
-            $this->parsedBody = $this->mediaType[$mediaType]($this->getBody());
+        if ($mediaType !== null && isset($this->mediaType[$mediaType])) {
+            $parsedBody = $this->mediaType[$mediaType]((string) $this->getBody());
+            if (!is_array($parsedBody) && !is_object($parsedBody) && !is_null($parsedBody)) {
+                throw new RuntimeException(
+                    'media type body parser must return value must be an array, an object, or null'
+                );
+            }
+            $this->parsedBody = $parsedBody;
         }
 
         return $this->parsedBody;
@@ -201,7 +208,7 @@ class Request extends Message implements ServerRequestInterface
 
     public function getAttributes()
     {
-        $this->attributes;
+        return $this->attributes;
     }
 
     public function getAttribute($name, $default = null)
@@ -245,6 +252,12 @@ class Request extends Message implements ServerRequestInterface
 
     public function withRequestTarget($requestTarget)
     {
+        if (preg_match('/\s/', $requestTarget)) {
+            throw new InvalidArgumentException(
+                'request target must be a string and cannot contain whitespace'
+            );
+        }
+
         $new = clone $this;
         $new->requestTarget = $requestTarget;
 
@@ -312,7 +325,7 @@ class Request extends Message implements ServerRequestInterface
 
     public function getContentType()
     {
-        $contentType = $this->getHeader('content_type');
+        $contentType = $this->getHeader('content-type');
         return $contentType ? $contentType[0] : null;
     }
 

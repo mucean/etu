@@ -163,7 +163,7 @@ class Request extends Message implements ServerRequestInterface
 
     public function getParsedBody()
     {
-        if (!$this->parsedBody !== false) {
+        if ($this->parsedBody !== false) {
             return $this->parsedBody;
         }
 

@@ -6,16 +6,6 @@ use Etu\Http\Request;
 
 class RequestTest extends \PHPUnit_Framework_TestCase
 {
-    protected $uploadedFiles;
-
-    public function __construct()
-    {
-        $uploadedFileTest = new UploadedFileTest;
-        $testFile = $uploadedFileTest->contextProvider()[0];
-        $_FILES = $testFile[0];
-        $this->uploadedFiles = $testFile[1];
-    }
-
     public function testBuildFromContext()
     {
         $context = BuildContext::getContext();
@@ -73,18 +63,20 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($newRequest->getQueryParams(), $testQueryParams);
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testGetUploadedFiles(Request $request)
+    public function testGetUploadedFiles()
     {
+        $uploadedFileTest = new UploadedFileTest;
+        $testFile = $uploadedFileTest->contextProvider()[0];
+        $_FILES = $testFile[0];
+        $this->uploadedFiles = $testFile[1];
+        $request = Request::buildFromContext(BuildContext::getContext());
         $this->assertEquals($this->uploadedFiles, $request->getUploadedFiles());
     }
 
     /**
      * @dataProvider requestProvider
      */
-    public function testGetParsedBody($request, $expect)
+    public function testGetParsedBody(Request $request, $expect)
     {
         $this->assertEquals($request->getParsedBody(), $expect);
     }
@@ -94,11 +86,11 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         return [
             [
                 Request::buildFromContext(BuildContext::getContext(['REQUEST_METHOD' => 'GET'])),
-                []
+                null
             ],
             [
                 Request::buildFromContext(BuildContext::getContext(['REQUEST_METHOD' => 'POST'])),
-                []
+                null
             ]
         ];
     }

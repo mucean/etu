@@ -4,6 +4,7 @@ namespace Etu\Http;
 
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\MessageInterface;
+use InvalidArgumentException;
 
 abstract class Message implements MessageInterface
 {
@@ -52,7 +53,7 @@ abstract class Message implements MessageInterface
 
     public function withHeader($name, $value)
     {
-        if (!is_string($name) || method_exists($name, '__toString')) {
+        if (!is_string($name) && !method_exists($name, '__toString')) {
             throw new InvalidArgumentException(
                 'header name must be a string or has __toString function when use withHeader function set a header'
             );
@@ -71,32 +72,33 @@ abstract class Message implements MessageInterface
 
     public function withAddedHeader($name, $value)
     {
-        if (!is_string($name) || method_exists($name, '__toString')) {
+        if (!is_string($name) && !method_exists($name, '__toString')) {
             throw new InvalidArgumentException(
-                'header name must be a string or has __toString function when use withHeader function set a header'
+                'header name must be a string or has __toString function when use withAddedHeader function'
             );
         }
 
         $name = trim((string) $name);
-        $headerName = strtolower($name);
         $new = clone $this;
 
-        if ($new->hasHeader($name)) {
-            $header = $new->getHeader($name);
+        $header = $new->getHeader($name);
+        if ($header !== []) {
             if (is_array($value)) {
                 foreach ($value as $eachValue) {
                     if (!in_array($eachValue, $header)) {
-                        $new->headers[$headerName][] = trim($value);
+                        $header[] = trim((string) $eachValue);
                     }
                 }
             } else {
                 if (!in_array($value, $header)) {
-                    $new->headers[$headerName][] = trim($value);
+                    $header[] = trim((string) $value);
                 }
             }
         } else {
-            $new->headers[$headerName] = $new->normalizeHeaderValue($value);
+            $header = $new->normalizeHeaderValue($value);
         }
+
+        $new->headers[strtolower($name)] = $header;
 
         $new->syncHeaderLines($name);
 
@@ -120,7 +122,7 @@ abstract class Message implements MessageInterface
     {
         $new = clone $this;
         $new->body = $body;
-        return $this->body;
+        return $new;
     }
 
     protected function validateProtocol($protocol)
@@ -139,31 +141,40 @@ abstract class Message implements MessageInterface
     {
         if (is_array($value)) {
             foreach ($value as &$eachValue) {
-                if (is_array($eachValue)) {
+                if (!is_string($eachValue) && !method_exists($eachValue, '__toString')) {
                     throw new InvalidArgumentException(
-                        'header value must be an type can be convert to string'
+                        'header array value must only contains an type can be convert to string'
                     );
                 }
                 $eachValue = trim($eachValue);
             }
             return $value;
-        } else {
+        } elseif (is_string($value) || method_exists($value, '__toString')) {
             return [trim($value)];
+        } else {
+            throw new InvalidArgumentException(
+                'header value must be an type can be convert to string or an array contains string value'
+            );
         }
     }
 
     protected function syncHeaderLines($name)
     {
         $headerName = strtolower($name);
+        $isNew = true;
         foreach (array_keys($this->headerLines) as $key) {
             if ($headerName === strtolower($key)) {
-                unset($this->headers[$key]);
+                unset($this->headerLines[$key]);
+                $isNew = false;
                 break;
             }
         }
 
         if ($this->hasHeader($headerName)) {
-            $this->headerLines[$name] = $this->headers[$headerName];
+            if ($isNew) {
+                $key = $name;
+            }
+            $this->headerLines[$key] = $this->headers[$headerName];
         }
     }
 

@@ -3,6 +3,7 @@
 namespace Tests\Http;
 
 use Etu\Http\Request;
+use Etu\Http\Uri;
 
 class RequestTest extends \PHPUnit_Framework_TestCase
 {
@@ -166,12 +167,71 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    /**
+     * @depends testBuildFromContext
+     */
+    public function testGetMethod(Request $request)
+    {
+        $this->assertEquals('PUT', $request->getMethod());
+        $otherRequest = Request::buildFromContext(BuildContext::getContext([
+            'REQUEST_METHOD' => 'GET',
+            'HTTP_X_Http_Method_Override' => 'POST'
+        ]));
+        $this->assertEquals('POST', $otherRequest->getMethod());
+    }
+
+    /**
+     * @depends testBuildFromContext
+     */
+    public function testWithMethod(Request $request)
+    {
+        $newRequest = $request->withMethod('DELETE');
+        $this->assertEquals($newRequest->getMethod(), 'DELETE');
+        $this->setExpectedException('InvalidArgumentException', 'request method must be a string');
+        $request->withMethod([]);
+    }
+
+    /**
+     * @depends testBuildFromContext
+     */
+    public function testWithMethodException(Request $request)
+    {
+        $this->setExpectedException('InvalidArgumentException', 'Request method must be a valid method');
+        $request->withMethod('hello');
+    }
+
+    /**
+     * @depends testBuildFromContext
+     */
+    public function testGetUri(Request $request)
+    {
+        $this->assertInstanceOf('Etu\Http\Uri', $request->getUri());
+    }
+
+    /**
+     * @depends testBuildFromContext
+     */
+    public function testWithUri(Request $request)
+    {
+        $newRequest = $request->withUri(Uri::buildFromUrl('http://www.mucean.com:90/abc/def?aa=bb#heihei'));
+        $this->assertEquals($newRequest->getHeaderLine('host'), 'www.mucean.com:90');
+        $newRequest = $request->withUri(Uri::buildFromUrl('http://www.mucean.com:90/abc/def?aa=bb#heihei'), true);
+        $this->assertEquals($newRequest->getHeaderLine('host'), $request->getHeaderLine('host'));
+    }
+
     public function requestProvider()
     {
         return [
             [
                 Request::buildFromContext(BuildContext::getContext(['REQUEST_METHOD' => 'GET'])),
                 []
+            ],
+            [
+                Request::buildFromContext(BuildContext::getContext([
+                    'REQUEST_METHOD' => 'GET',
+                    'HTTP_CONTENT_TYPE' => 'abcdefg'
+                ])),
+                null
             ],
             [
                 Request::buildFromContext(BuildContext::getContext([

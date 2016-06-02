@@ -312,15 +312,19 @@ class Request extends Message implements ServerRequestInterface
 
     public function withUri(UriInterface $uri, $preserveHost = false)
     {
-        $this->uri = $uri;
+        $new = clone $this;
 
-        $host = $uri->getHost();
+        $new->uri = $uri;
+
+        $host = $new->uri->getHost();
         if (!$preserveHost && $host) {
             if ($port = $uri->getPort()) {
                 $host .= ':' . $port;
             }
-            $this->withHeader('Host', $host);
+            $new = $new->withHeader('Host', $host);
         }
+
+        return $new;
     }
 
     public function getContentType()

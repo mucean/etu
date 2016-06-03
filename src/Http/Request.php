@@ -6,7 +6,7 @@ use Etu\Http\Context;
 use Etu\Http\Message;
 use Etu\Http\Uri;
 use Etu\Stream;
-use Etu\Traits\ArrayPropertyAccess;
+use Etu\Traits\ArrayPropertyAllAccess;
 use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
@@ -15,7 +15,7 @@ use RuntimeException;
 
 class Request extends Message implements ServerRequestInterface
 {
-    use ArrayPropertyAccess;
+    use ArrayPropertyAllAccess;
 
     protected $servers;
     protected $cookies;
@@ -206,7 +206,7 @@ class Request extends Message implements ServerRequestInterface
 
     public function withParsedBody($data)
     {
-        if (!is_array($data) && !null === $data && !is_object($data)) {
+        if (!is_array($data) && null !== $data && !is_object($data)) {
             throw new \InvalidArgumentException(
                 'Parsed body must be an array type, an object type or null'
             );

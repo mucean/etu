@@ -1,5 +1,4 @@
 <?php
-
 namespace Etu;
 
 class Application
@@ -20,9 +19,9 @@ class Application
 
     public function __construct()
     {
-        $this->middleware = new \Etu\Middleware;
+        $this->middleware = new \Etu\Middleware();
     }
-    
+
     /**
      * Start app handle request
      *
@@ -35,11 +34,13 @@ class Application
             $this->middlewar->execute();
         } catch (\Exception $e) {
             $handler = $this->exceptionHandler;
-            if ($handler === null) {
+
+            if (null === $handler) {
                 $handler = function () use ($request, $response) {
                     // todo handle exception
                 };
             }
+
             call_user_func_array($handler, [$e]);
         }
     }
@@ -66,6 +67,7 @@ class Application
     public static function registerNamespace($dir, $namespace, callable $func = null)
     {
         $dir = rtrim(strval($dir), '\\/');
+
         if (TEST) {
             if (!is_dir($dir)) {
                 throw new \Exception(
@@ -74,7 +76,7 @@ class Application
             }
         }
 
-        if ($func === null) {
+        if (null === $func) {
             $preNamespace = ltrim($namespace, '\\');
             $preNamespaceLen = strlen($preNamespace);
             $func = function ($class) use (
@@ -83,20 +85,25 @@ class Application
                 $preNamespaceLen
             ) {
                 $class = ltrim($class, '\\');
-                if ($preNamespace === '') {
+
+                if ('' === $preNamespace) {
                     $partDir = str_replace('\\', '/', $class);
                 } else {
                     $validateResult = strpos($class, $preNamespace);
-                    if ($validateResult === false || $validateResult > 0) {
-                        return null;
+
+                    if (false === $validateResult || $validateResult > 0) {
+                        return;
                     }
+
                     $partDir = str_replace(
                         '\\',
                         DIRECTORY_SEPARATOR,
                         substr($class, $preNamespaceLen + 1)
                     );
                 }
+
                 $file = $dir . DIRECTORY_SEPARATOR . $partDir . '.php';
+
                 if (is_file($file)) {
                     include_once $file;
                 }

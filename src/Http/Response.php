@@ -1,11 +1,10 @@
 <?php
-
 namespace Etu\Http;
 
-use Psr\Http\Message\ResponseInterface;
-use InvalidArgumentException;
-use Psr\Http\Message\StreamInterface;
 use Etu\Stream;
+use InvalidArgumentException;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 
 class Response extends Message implements ResponseInterface
 {
@@ -62,12 +61,9 @@ class Response extends Message implements ResponseInterface
         422 => 'Unprocessable Entity',
         423 => 'Locked',
         424 => 'Failed Dependency',
-        425 => 'Unassigned',
         426 => 'Upgrade Required',
-        427 => 'Unassigned',
         428 => 'Precondition Required',
         429 => 'Too Many Requests',
-        430 => 'Unassigned',
         431 => 'Request Header Fields Too Large',
         451 => 'Unavailable For Legal Reasons',
         500 => 'Internal Server Error',
@@ -79,7 +75,6 @@ class Response extends Message implements ResponseInterface
         506 => 'Variant Also Negotiates',
         507 => 'Insufficient Storage',
         508 => 'Loop Detected',
-        509 => 'Unassigned',
         510 => 'Not Extended',
         511 => 'Network Authentication Required',
     ];
@@ -99,8 +94,9 @@ class Response extends Message implements ResponseInterface
     public function withStatus($code, $reasonPhrase = '')
     {
         $this->validateStatusCode($code);
-        $new = clone $this;
+        $new             = clone $this;
         $new->statusCode = $code;
+
         if ($reasonPhrase) {
             $new->reasonPhrase = $reasonPhrase;
         } else {
@@ -112,7 +108,7 @@ class Response extends Message implements ResponseInterface
 
     public function getReasonPhrase()
     {
-        if ($this->reasonPhrase !== null) {
+        if (null !== $this->reasonPhrase) {
             return $this->reasonPhrase;
         }
 
@@ -124,6 +120,7 @@ class Response extends Message implements ResponseInterface
     public function write($data)
     {
         $this->getBody()->write($data);
+
         return $this;
     }
 
@@ -140,7 +137,7 @@ class Response extends Message implements ResponseInterface
 
     protected function validateStatusCode($statusCode)
     {
-        if (!is_integer($statusCode) || $statusCode < 100 || $statusCode > 599) {
+        if (!is_int($statusCode) || $statusCode < 100 || $statusCode > 599) {
             throw new InvalidArgumentException('Invalid status code');
         }
     }

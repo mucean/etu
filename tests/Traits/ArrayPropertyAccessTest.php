@@ -3,7 +3,7 @@ namespace tests\Traits;
 
 class ArrayPropertyAccessTest extends \PHPUnit_Framework_TestCase
 {
-    use \Etu\Traits\ArrayPropertyAccess;
+    use \Etu\Traits\ArrayPropertyAllAccess;
 
     protected $readArray = ['abc' => ['acb' => ['aaa', 'bbb'], 'dfg' => 'cdd']];
     protected $writeArray = ['abc' => ['acb' => ['aaa', 'bbb'], 'dfg' => 'cdd']];

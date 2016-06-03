@@ -4,7 +4,7 @@ namespace Etu\Traits;
 use InvalidArgumentException;
 use RuntimeException;
 
-trait ArrayPropertyAccess
+trait ArrayPropertyReadAccess
 {
     protected $accessProperties = [];
 
@@ -27,27 +27,6 @@ trait ArrayPropertyAccess
         return $data;
     }
 
-    public function set($propertyName, array $accessPath, $value)
-    {
-        $this->permissionValidate($propertyName, ['isWriteOperate' => true, 'throwException' => true]);
-
-        if ([] === $accessPath) {
-            throw new InvalidArgumentException('accessPath must not be a empty array');
-        }
-
-        $data = &$this->$propertyName;
-
-        foreach ($accessPath as $path) {
-            if (!isset($data[$path])) {
-                $data[$path] = [];
-            }
-
-            $data = &$data[$path];
-        }
-
-        $data = $value;
-    }
-
     public function has($propertyName, array $accessPath)
     {
         if ($this->permissionValidate($propertyName) !== 0) {
@@ -62,31 +41,6 @@ trait ArrayPropertyAccess
             } else {
                 return false;
             }
-        }
-
-        return true;
-    }
-
-    function unset($propertyName, array $accessPath) {
-        $this->permissionValidate($propertyName, ['isWriteOperate' => true, 'throwException' => true]);
-
-        if ([] === $accessPath) {
-            throw new InvalidArgumentException('accessPath must not be a empty array');
-        }
-
-        $data = &$this->$propertyName;
-        $lastKey = array_pop($accessPath);
-
-        foreach ($accessPath as $path) {
-            if (!isset($data[$path])) {
-                return true;
-            }
-
-            $data = &$data[$path];
-        }
-
-        if (isset($data[$lastKey])) {
-            unset($data[$lastKey]);
         }
 
         return true;

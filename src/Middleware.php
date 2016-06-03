@@ -1,5 +1,4 @@
 <?php
-
 namespace Etu;
 
 /**
@@ -37,13 +36,14 @@ class Middleware
     public function execute()
     {
         $afterExecs = [];
+
         foreach ($this->middlewares as $middleware) {
             $res = call_user_func_array($middleware, []);
+
             if ($res instanceof \Generator) {
                 $afterExecs[] = $res;
             }
         }
-
         while (($handle = array_pop($afterExecs)) !== null) {
             $handle->next();
         }

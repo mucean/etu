@@ -1,18 +1,17 @@
 <?php
-
 namespace Etu\Http;
 
+use Closure;
+use Etu\Http\Context;
+use Etu\Http\Message;
+use Etu\Http\Uri;
+use Etu\Stream;
+use Etu\Traits\ArrayPropertyAccess;
+use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
-use Etu\Http\Message;
-use Etu\Stream;
-use InvalidArgumentException;
 use RuntimeException;
-use Closure;
-use Etu\Http\Uri;
-use Etu\Http\Context;
-use Etu\Traits\ArrayPropertyAccess;
 
 class Request extends Message implements ServerRequestInterface
 {
@@ -41,6 +40,7 @@ class Request extends Message implements ServerRequestInterface
         $bodyStream = new Stream($bodyStream);
         $uri = Uri::buildFromContext($context);
         $uploadedFiles = UploadedFile::buildFromContext();
+
         return new static($context->all(), $_COOKIE, $bodyStream, $uri, $uploadedFiles);
     }
 
@@ -58,6 +58,7 @@ class Request extends Message implements ServerRequestInterface
         $this->uploadedFiles = $uploadedFiles;
         $this->originalMethod = $this->servers['REQUEST_METHOD'];
         $this->setHeaders(getallheaders($this->servers));
+
         if (!$this->hasHeader('host') && isset($_SERVER['SERVER_NAME'])) {
             $this->withHeader('Host', $_SERVER['SERVER_NAME']);
         }
@@ -69,11 +70,13 @@ class Request extends Message implements ServerRequestInterface
         // add body type parser
         $this->addMediaTypeParser('multipart/form-data', function ($body) {
             parse_str($body, $data);
+
             return $data;
         });
 
         $this->addMediaTypeParser('application/x-www-form-urlencoded', function ($body) {
             parse_str($body, $data);
+
             return $data;
         });
 
@@ -85,6 +88,7 @@ class Request extends Message implements ServerRequestInterface
             $backup = libxml_disable_entity_loader(true);
             $result = simplexml_load_string($body);
             libxml_disable_entity_loader($backup);
+
             return $result;
         });
 
@@ -92,6 +96,7 @@ class Request extends Message implements ServerRequestInterface
             $backup = libxml_disable_entity_loader(true);
             $result = simplexml_load_string($body);
             libxml_disable_entity_loader($backup);
+
             return $result;
         });
 
@@ -112,21 +117,23 @@ class Request extends Message implements ServerRequestInterface
     {
         $new = clone $this;
         $new->cookies = $cookies;
+
         return $new;
     }
 
     public function getQueryParams()
     {
-        if ($this->queryParams !== null) {
+        if (null !== $this->queryParams) {
             return $this->queryParams;
         }
 
         if (isset($this->servers['QUERY_STRING'])) {
             $query = $this->servers['QUERY_STRING'];
         } else {
-            if ($this->uri === null) {
+            if (null === $this->uri) {
                 $this->uri = $this->getUri();
             }
+
             $query = $this->uri->getQuery();
         }
 
@@ -139,6 +146,7 @@ class Request extends Message implements ServerRequestInterface
     {
         $new = clone $this;
         $new->queryParams = $query;
+
         return $new;
     }
 
@@ -159,17 +167,19 @@ class Request extends Message implements ServerRequestInterface
 
         $new = clone $this;
         $this->uploadedFiles = $uploadedFiles;
+
         return $new;
     }
 
     public function getParsedBody()
     {
-        if ($this->parsedBody !== false) {
+        if (false !== $this->parsedBody) {
             return $this->parsedBody;
         }
 
         if (strtolower($this->originalMethod) === 'post') {
             $contentType = strtolower($this->getHeaderLine('content-type'));
+
             if (strpos($contentType, 'application/x-www-form-urlencoded') !== false ||
                 strpos($contentType, 'multipart/form-data') !== false) {
                 return $this->parsedBody = $_POST;
@@ -178,13 +188,16 @@ class Request extends Message implements ServerRequestInterface
 
         $this->parsedBody = null;
         $mediaType = $this->getMediaType();
-        if ($mediaType !== null && isset($this->mediaType[$mediaType])) {
+
+        if (null !== $mediaType && isset($this->mediaType[$mediaType])) {
             $parsedBody = $this->mediaType[$mediaType]((string) $this->getBody());
-            if (!is_array($parsedBody) && !is_object($parsedBody) && !is_null($parsedBody)) {
+
+            if (!is_array($parsedBody) && !is_object($parsedBody) && !null === $parsedBody) {
                 throw new RuntimeException(
                     'media type body parser must return value must be an array, an object, or null'
                 );
             }
+
             $this->parsedBody = $parsedBody;
         }
 
@@ -193,7 +206,7 @@ class Request extends Message implements ServerRequestInterface
 
     public function withParsedBody($data)
     {
-        if (!is_array($data) && !is_null($data) && !is_object($data)) {
+        if (!is_array($data) && !null === $data && !is_object($data)) {
             throw new \InvalidArgumentException(
                 'Parsed body must be an array type, an object type or null'
             );
@@ -214,14 +227,15 @@ class Request extends Message implements ServerRequestInterface
     public function getAttribute($name, $default = null)
     {
         return isset($this->attributes[$name]) ?
-            $this->attributes[$name] :
-            $default;
+        $this->attributes[$name] :
+        $default;
     }
 
     public function withAttribute($name, $value)
     {
         $new = clone $this;
         $new->attributes[$name] = $value;
+
         return $new;
     }
 
@@ -229,20 +243,22 @@ class Request extends Message implements ServerRequestInterface
     {
         $new = clone $this;
         unset($new->attributes[$name]);
+
         return $new;
     }
 
     public function getRequestTarget()
     {
-        if ($this->requestTarget !== null) {
+        if (null !== $this->requestTarget) {
             return $this->requestTarget;
         }
 
-        if ($this->uri === null) {
+        if (null === $this->uri) {
             return '/';
         }
 
         $target = $this->uri->getPath();
+
         if ($query = $this->uri->getQuery()) {
             $target = $target . '?' . $query;
         }
@@ -266,7 +282,7 @@ class Request extends Message implements ServerRequestInterface
 
     public function getMethod()
     {
-        if ($this->method !== null) {
+        if (null !== $this->method) {
             return $this->method;
         }
 
@@ -317,10 +333,12 @@ class Request extends Message implements ServerRequestInterface
         $new->uri = $uri;
 
         $host = $new->uri->getHost();
+
         if (!$preserveHost && $host) {
             if ($port = $uri->getPort()) {
                 $host .= ':' . $port;
             }
+
             $new = $new->withHeader('Host', $host);
         }
 
@@ -330,6 +348,7 @@ class Request extends Message implements ServerRequestInterface
     public function getContentType()
     {
         $contentType = $this->getHeader('content-type');
+
         return $contentType ? $contentType[0] : null;
     }
 
@@ -338,6 +357,7 @@ class Request extends Message implements ServerRequestInterface
         $contentType = $this->getContentType();
 
         $mediaType = null;
+
         if ($contentType) {
             $contentTypeParts = preg_split('/\s*[;,]\s*/', $contentType);
             $mediaType = $contentTypeParts[0];
@@ -351,6 +371,7 @@ class Request extends Message implements ServerRequestInterface
         if ($parser instanceof Closure) {
             $parser = $parser->bindTo($this, $this);
         }
+
         $this->mediaType[(string) $type] = $parser;
     }
 }

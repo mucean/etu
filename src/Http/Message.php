@@ -1,10 +1,9 @@
 <?php
-
 namespace Etu\Http;
 
-use Psr\Http\Message\StreamInterface;
-use Psr\Http\Message\MessageInterface;
 use InvalidArgumentException;
+use Psr\Http\Message\MessageInterface;
+use Psr\Http\Message\StreamInterface;
 
 abstract class Message implements MessageInterface
 {
@@ -26,6 +25,7 @@ abstract class Message implements MessageInterface
         $new = clone $this;
         $this->validateProtocol($version);
         $new->protocol = $version;
+
         return $new;
     }
 
@@ -42,8 +42,8 @@ abstract class Message implements MessageInterface
     public function getHeader($name)
     {
         return $this->hasHeader($name) ?
-            $this->headers[strtolower($name)] :
-            [];
+        $this->headers[strtolower($name)] :
+        [];
     }
 
     public function getHeaderLine($name)
@@ -82,7 +82,8 @@ abstract class Message implements MessageInterface
         $new = clone $this;
 
         $header = $new->getHeader($name);
-        if ($header !== []) {
+
+        if ([] !== $header) {
             if (is_array($value)) {
                 foreach ($value as $eachValue) {
                     if (!in_array($eachValue, $header)) {
@@ -110,6 +111,7 @@ abstract class Message implements MessageInterface
         $new = clone $this;
         unset($new->headers[strtolower($name)]);
         $new->syncHeaderLines($name);
+
         return $new;
     }
 
@@ -122,6 +124,7 @@ abstract class Message implements MessageInterface
     {
         $new = clone $this;
         $new->body = $body;
+
         return $new;
     }
 
@@ -146,8 +149,10 @@ abstract class Message implements MessageInterface
                         'header array value must only contains an type can be convert to string'
                     );
                 }
+
                 $eachValue = trim($eachValue);
             }
+
             return $value;
         } elseif (is_string($value) || method_exists($value, '__toString')) {
             return [trim($value)];
@@ -162,8 +167,9 @@ abstract class Message implements MessageInterface
     {
         $headerName = strtolower($name);
         $isNew = true;
+
         foreach (array_keys($this->headerLines) as $key) {
-            if ($headerName === strtolower($key)) {
+            if (strtolower($key) === $headerName) {
                 unset($this->headerLines[$key]);
                 $isNew = false;
                 break;
@@ -174,6 +180,7 @@ abstract class Message implements MessageInterface
             if ($isNew) {
                 $key = $name;
             }
+
             $this->headerLines[$key] = $this->headers[$headerName];
         }
     }
@@ -181,9 +188,11 @@ abstract class Message implements MessageInterface
     protected function setHeaders(array $headers)
     {
         $this->headerLines = $this->headers = [];
+
         foreach ($headers as $name => $value) {
             $name = trim($name);
             $headerName = strtolower($name);
+
             if (!is_array($value)) {
                 $value = trim($value);
                 $this->headers[$headerName][] = $value;

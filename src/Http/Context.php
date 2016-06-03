@@ -1,5 +1,4 @@
 <?php
-
 namespace Etu\Http;
 
 class Context implements \ArrayAccess, \Countable

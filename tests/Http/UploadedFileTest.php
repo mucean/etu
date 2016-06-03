@@ -1,5 +1,4 @@
 <?php
-
 namespace Tests\Http;
 
 use Etu\Http\UploadedFile;
@@ -45,7 +44,7 @@ class UploadedFileTest extends \PHPUnit_Framework_TestCase
             'name' => 'testFile',
             'type' => 'text/plain',
             'size' => 100,
-            'error' => UPLOAD_ERR_OK
+            'error' => UPLOAD_ERR_OK,
         ];
 
         $uploadedFile = new UploadedFile(
@@ -102,65 +101,65 @@ class UploadedFileTest extends \PHPUnit_Framework_TestCase
         return [
             [
                 ['avatar' => [
-                        'tmp_name' => self::$file,
-                        'name' => 'avatar.jpg',
-                        'type' => 'image/jpg',
-                        'size' => 2676,
-                        'error' => UPLOAD_ERR_OK
-                    ]],
-                ['avatar' => new UploadedFile(self::$file, 'avatar.jpg', 'image/jpg', 2676, UPLOAD_ERR_OK, true)]
+                    'tmp_name' => self::$file,
+                    'name' => 'avatar.jpg',
+                    'type' => 'image/jpg',
+                    'size' => 2676,
+                    'error' => UPLOAD_ERR_OK,
+                ]],
+                ['avatar' => new UploadedFile(self::$file, 'avatar.jpg', 'image/jpg', 2676, UPLOAD_ERR_OK, true)],
             ],
             [
                 [
                     'avatar' => [
                         'tmp_name' => [
                             0 => self::$file,
-                            1 => self::$file
+                            1 => self::$file,
                         ],
                         'name' => [
                             0 => 'avatar1.jpg',
-                            1 => 'avatar2.jpg'
+                            1 => 'avatar2.jpg',
                         ],
                         'type' => [
                             0 => 'image/jpg',
-                            1 => 'image/jpg'
+                            1 => 'image/jpg',
                         ],
                         'size' => [
                             0 => 234,
-                            1 => 1234
+                            1 => 1234,
                         ],
                         'error' => [
                             0 => UPLOAD_ERR_OK,
-                            1 => UPLOAD_ERR_OK
-                        ]
-                    ]
+                            1 => UPLOAD_ERR_OK,
+                        ],
+                    ],
                 ],
                 [
                     'avatar' => [
                         0 => new UploadedFile(self::$file, 'avatar1.jpg', 'image/jpg', 234, UPLOAD_ERR_OK, true),
-                        1 => new UploadedFile(self::$file, 'avatar2.jpg', 'image/jpg', 1234, UPLOAD_ERR_OK, true)
-                    ]
-                ]
+                        1 => new UploadedFile(self::$file, 'avatar2.jpg', 'image/jpg', 1234, UPLOAD_ERR_OK, true),
+                    ],
+                ],
             ],
             [
                 [
                     'avatar' => [
                         'tmp_name' => [
-                            'profile' => self::$file
+                            'profile' => self::$file,
                         ],
                         'name' => [
-                            'profile' => 'profile.jpg'
+                            'profile' => 'profile.jpg',
                         ],
                         'type' => [
-                            'profile' => 'image/jpg'
+                            'profile' => 'image/jpg',
                         ],
                         'size' => [
-                            'profile' => 2345
+                            'profile' => 2345,
                         ],
                         'error' => [
-                            'profile' => UPLOAD_ERR_OK
-                        ]
-                    ]
+                            'profile' => UPLOAD_ERR_OK,
+                        ],
+                    ],
                 ],
                 [
                     'avatar' => [
@@ -171,42 +170,42 @@ class UploadedFileTest extends \PHPUnit_Framework_TestCase
                             2345,
                             UPLOAD_ERR_OK,
                             true
-                        )
-                    ]
+                        ),
+                    ],
                 ],
                 [
                     'avatar' => [
                         'tmp_name' => [
                             'profile' => [
                                 0 => self::$file,
-                                1 => self::$file
-                            ]
+                                1 => self::$file,
+                            ],
                         ],
                         'name' => [
                             'profile' => [
                                 0 => 'profile1.jpg',
-                                1 => 'profile2.jpg'
-                            ]
+                                1 => 'profile2.jpg',
+                            ],
                         ],
                         'type' => [
                             'profile' => [
                                 0 => 'image/jpg',
-                                1 => 'image/jpg'
-                            ]
+                                1 => 'image/jpg',
+                            ],
                         ],
                         'size' => [
                             'profile' => [
                                 0 => 1234,
-                                1 => 4321
-                            ]
+                                1 => 4321,
+                            ],
                         ],
                         'error' => [
                             'profile' => [
                                 0 => UPLOAD_ERR_OK,
-                                1 => UPLOAD_ERR_OK
-                            ]
-                        ]
-                    ]
+                                1 => UPLOAD_ERR_OK,
+                            ],
+                        ],
+                    ],
                 ],
                 [
                     'avatar' => [
@@ -226,11 +225,11 @@ class UploadedFileTest extends \PHPUnit_Framework_TestCase
                                 4321,
                                 UPLOAD_ERR_OK,
                                 true
-                            )
-                        ]
-                    ]
-                ]
-            ]
+                            ),
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 }

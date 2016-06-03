@@ -1,5 +1,4 @@
 <?php
-
 namespace Tests\Http;
 
 use Etu\Stream;
@@ -16,7 +15,7 @@ class StreamTest extends \PHPUnit_Framework_TestCase
     {
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $this->str);
-        rewind($stream);
+        rewinddir($stream);
         $this->stream = new Stream($stream);
     }
 
@@ -135,7 +134,7 @@ class StreamTest extends \PHPUnit_Framework_TestCase
     {
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $this->str);
-        rewind($stream);
+        rewinddir($stream);
         $metadata = stream_get_meta_data($stream);
         $this->assertEquals($this->stream->getMetadata(), $metadata);
         $this->assertEquals($this->stream->getMetadata('uri'), $metadata['uri']);

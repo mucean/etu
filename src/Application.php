@@ -1,6 +1,13 @@
 <?php
 namespace Etu;
 
+use Etu\Http\Context;
+use Etu\Http\Request;
+use Etu\Http\Response;
+use Etu\Middleware;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
 class Application
 {
     /**
@@ -19,17 +26,20 @@ class Application
 
     public function __construct()
     {
-        $this->middleware = new \Etu\Middleware();
+        $this->middleware = new Middleware();
     }
 
     /**
-     * Start app handle request
+     * run app handle request
      *
-     * @return null
+     * @return ResponseInterface
      */
-    public function start()
+    public function run()
     {
-        // todo complete Request and Response
+        $context = new Context($_SERVER);
+        $request = Request::buildFromContext($context);
+        $response = new Response();
+
         try {
             $this->middlewar->execute();
         } catch (\Exception $e) {
@@ -43,6 +53,13 @@ class Application
 
             call_user_func_array($handler, [$e]);
         }
+    }
+
+    public function process(ServerRequestInterface $request, Response $response)
+    {
+        $request;
+
+        return $response;
     }
 
     /**

@@ -1,9 +1,8 @@
 <?php
-
 namespace Tests\Http;
 
-use Etu\Http\Message;
 use Etu\Http\Context;
+use Etu\Http\Message;
 use Etu\Stream;
 
 class MessageMock extends Message

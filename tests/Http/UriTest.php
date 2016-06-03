@@ -1,5 +1,4 @@
 <?php
-
 namespace Tests\Http;
 
 use \Etu\Http\Uri;

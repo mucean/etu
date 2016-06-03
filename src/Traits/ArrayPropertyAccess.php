@@ -1,5 +1,4 @@
 <?php
-
 namespace Etu\Traits;
 
 use InvalidArgumentException;
@@ -32,7 +31,7 @@ trait ArrayPropertyAccess
     {
         $this->permissionValidate($propertyName, ['isWriteOperate' => true, 'throwException' => true]);
 
-        if ($accessPath === []) {
+        if ([] === $accessPath) {
             throw new InvalidArgumentException('accessPath must not be a empty array');
         }
 
@@ -42,6 +41,7 @@ trait ArrayPropertyAccess
             if (!isset($data[$path])) {
                 $data[$path] = [];
             }
+
             $data = &$data[$path];
         }
 
@@ -67,11 +67,10 @@ trait ArrayPropertyAccess
         return true;
     }
 
-    public function unset($propertyName, array $accessPath)
-    {
+    function unset($propertyName, array $accessPath) {
         $this->permissionValidate($propertyName, ['isWriteOperate' => true, 'throwException' => true]);
 
-        if ($accessPath === []) {
+        if ([] === $accessPath) {
             throw new InvalidArgumentException('accessPath must not be a empty array');
         }
 
@@ -82,12 +81,14 @@ trait ArrayPropertyAccess
             if (!isset($data[$path])) {
                 return true;
             }
+
             $data = &$data[$path];
         }
 
         if (isset($data[$lastKey])) {
             unset($data[$lastKey]);
         }
+
         return true;
     }
 
@@ -96,6 +97,7 @@ trait ArrayPropertyAccess
         $option = ['isWriteOperate' => false, 'throwException' => false]
     ) {
         $isWriteOperate = $throwException = false;
+
         if (isset($option['isWriteOperate']) && (bool) $option['isWriteOperate']) {
             $isWriteOperate = true;
         }

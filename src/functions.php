@@ -4,6 +4,7 @@ if (!function_exists('getallheaders')) {
     function getallheaders(array &$servers)
     {
         $headers = [];
+
         foreach ($servers as $name => $value) {
             if (strpos($name, 'HTTP_') === 0) {
                 $headers[str_replace(
@@ -13,6 +14,7 @@ if (!function_exists('getallheaders')) {
                 )] = $value;
             }
         }
+
         return $headers;
     }
 }

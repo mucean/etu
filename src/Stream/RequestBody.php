@@ -1,5 +1,4 @@
 <?php
-
 namespace Etu\Stream;
 
 use Etu\Stream;

@@ -1,5 +1,4 @@
 <?php
-
 namespace Tests\Http;
 
 use Etu\Stream;
@@ -10,6 +9,7 @@ class MessageTest extends \PHPUnit_Framework_TestCase
     {
         $message = new MessageMock(BuildContext::getContext());
         $this->assertInstanceOf('Tests\Http\MessageMock', $message);
+
         return $message;
     }
 

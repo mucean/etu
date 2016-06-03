@@ -1,5 +1,4 @@
 <?php
-
 namespace Tests\Http;
 
 use Etu\Http\Context;
@@ -41,12 +40,13 @@ class BuildContext
         'PHP_SELF' => '/app/test',
         'REQUEST_TIME_FLOAT' => 1464250809.863632,
         'REQUEST_TIME' => 1464250809,
-        'test' => ['hi' => 'hello']
+        'test' => ['hi' => 'hello'],
     ];
 
     public static function getContext(array $context = [])
     {
         $context = array_merge(static::$context, $context);
+
         return new Context($context);
     }
 }

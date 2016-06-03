@@ -94,7 +94,7 @@ class Response extends Message implements ResponseInterface
     public function withStatus($code, $reasonPhrase = '')
     {
         $this->validateStatusCode($code);
-        $new             = clone $this;
+        $new = clone $this;
         $new->statusCode = $code;
 
         if ($reasonPhrase) {

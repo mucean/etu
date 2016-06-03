@@ -1,5 +1,4 @@
 <?php
-
 namespace Etu\Interfaces;
 
 interface PropertyAccessInterface

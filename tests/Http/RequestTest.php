@@ -1,5 +1,4 @@
 <?php
-
 namespace Tests\Http;
 
 use Etu\Http\Request;
@@ -12,6 +11,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $context = BuildContext::getContext();
         $request = Request::buildFromContext($context);
         $this->assertInstanceOf('Etu\Http\Request', $request);
+
         return $request;
     }
 
@@ -66,7 +66,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function testGetUploadedFiles()
     {
-        $uploadedFileTest = new UploadedFileTest;
+        $uploadedFileTest = new UploadedFileTest();
         $testFile = $uploadedFileTest->contextProvider()[0];
         $_FILES = $testFile[0];
         $this->uploadedFiles = $testFile[1];
@@ -80,10 +80,12 @@ class RequestTest extends \PHPUnit_Framework_TestCase
     public function testGetParsedBody(Request $request, $expect, $stream = '', $post = [])
     {
         $_POST = $post;
+
         if ($stream) {
             $body = $request->getBody();
             $body->write($stream);
         }
+
         $this->assertEquals($request->getParsedBody(), $expect);
     }
 
@@ -175,7 +177,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('PUT', $request->getMethod());
         $otherRequest = Request::buildFromContext(BuildContext::getContext([
             'REQUEST_METHOD' => 'GET',
-            'HTTP_X_Http_Method_Override' => 'POST'
+            'HTTP_X_Http_Method_Override' => 'POST',
         ]));
         $this->assertEquals('POST', $otherRequest->getMethod());
     }
@@ -224,53 +226,53 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         return [
             [
                 Request::buildFromContext(BuildContext::getContext(['REQUEST_METHOD' => 'GET'])),
-                []
+                [],
             ],
             [
                 Request::buildFromContext(BuildContext::getContext([
                     'REQUEST_METHOD' => 'GET',
-                    'HTTP_CONTENT_TYPE' => 'abcdefg'
+                    'HTTP_CONTENT_TYPE' => 'abcdefg',
                 ])),
-                null
+                null,
             ],
             [
                 Request::buildFromContext(BuildContext::getContext([
                     'REQUEST_METHOD' => 'GET',
-                    'HTTP_CONTENT_TYPE' => 'multipart/form-data'
+                    'HTTP_CONTENT_TYPE' => 'multipart/form-data',
                 ])),
                 ['aa' => 'bb', 'cc' => ['dd', 'ee']],
-                'aa=bb&cc[]=dd&&cc[]=ee'
+                'aa=bb&cc[]=dd&&cc[]=ee',
             ],
             [
                 Request::buildFromContext(BuildContext::getContext([
                     'REQUEST_METHOD' => 'PUT',
-                    'HTTP_CONTENT_TYPE' => 'application/x-www-form-urlencoded'
+                    'HTTP_CONTENT_TYPE' => 'application/x-www-form-urlencoded',
                 ])),
                 ['aa' => 'bb', 'cc' => ['dd', 'ee']],
-                'aa=bb&cc[]=dd&&cc[]=ee'
+                'aa=bb&cc[]=dd&&cc[]=ee',
             ],
             [
                 Request::buildFromContext(BuildContext::getContext([
                     'REQUEST_METHOD' => 'POST',
-                    'HTTP_CONTENT_TYPE' => 'application/x-www-form-urlencoded'
+                    'HTTP_CONTENT_TYPE' => 'application/x-www-form-urlencoded',
                 ])),
                 ['aa' => 'bb'],
                 '',
-                ['aa' => 'bb']
+                ['aa' => 'bb'],
             ],
             [
                 Request::buildFromContext(BuildContext::getContext([
                     'REQUEST_METHOD' => 'POST',
-                    'HTTP_CONTENT_TYPE' => 'multipart/form-data'
+                    'HTTP_CONTENT_TYPE' => 'multipart/form-data',
                 ])),
                 ['aa' => 'bb'],
                 '',
-                ['aa' => 'bb']
+                ['aa' => 'bb'],
             ],
             [
                 Request::buildFromContext(BuildContext::getContext([
                     'REQUEST_METHOD' => 'DELETE',
-                    'HTTP_CONTENT_TYPE' => 'application/json'
+                    'HTTP_CONTENT_TYPE' => 'application/json',
                 ])),
                 ['aa' => 'bb'],
                 '{"aa":"bb"}',
@@ -278,7 +280,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
             [
                 Request::buildFromContext(BuildContext::getContext([
                     'REQUEST_METHOD' => 'DELETE',
-                    'HTTP_CONTENT_TYPE' => 'application/xml'
+                    'HTTP_CONTENT_TYPE' => 'application/xml',
                 ])),
                 simplexml_load_string('<language><best>php</best></language>'),
                 '<language><best>php</best></language>',
@@ -286,11 +288,11 @@ class RequestTest extends \PHPUnit_Framework_TestCase
             [
                 Request::buildFromContext(BuildContext::getContext([
                     'REQUEST_METHOD' => 'DELETE',
-                    'HTTP_CONTENT_TYPE' => 'text/xml'
+                    'HTTP_CONTENT_TYPE' => 'text/xml',
                 ])),
                 simplexml_load_string('<language><best>php</best></language>'),
                 '<language><best>php</best></language>',
-            ]
+            ],
         ];
     }
 }

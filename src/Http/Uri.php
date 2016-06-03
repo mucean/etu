@@ -1,10 +1,9 @@
 <?php
-
 namespace Etu\Http;
 
-use Psr\Http\Message\UriInterface;
-use InvalidArgumentException;
 use Etu\Http\Context;
+use InvalidArgumentException;
+use Psr\Http\Message\UriInterface;
 
 class Uri implements UriInterface
 {
@@ -12,7 +11,7 @@ class Uri implements UriInterface
     protected static $charsSubDelim = '!\$&\'\(\)\*\+,;=';
     protected static $standardPort = [
         'http' => 80,
-        'https' => 443
+        'https' => 443,
     ];
 
     protected $scheme = false;
@@ -30,8 +29,8 @@ class Uri implements UriInterface
      */
     public static function buildFromUrl($url = null)
     {
-        if ($url === null) {
-            return null;
+        if (null === $url) {
+            return;
         }
 
         if (!is_string($url)) {
@@ -39,24 +38,30 @@ class Uri implements UriInterface
                 sprintf('build a uri instance need a url of string type, %s given', gettype($url))
             );
         }
+
         $scheme = $host = $path = $query = $fragment = $user = $pass = '';
         $port = null;
         $component = parse_url($url);
-        if ($component === false) {
+
+        if (false === $component) {
             throw new \Exception('Class Uri construct with a valid url');
         }
+
         extract($component);
+
         return new static($scheme, $host, $port, $path, $query, $fragment, $user, $pass);
     }
 
     public static function buildFromContext(Context $context)
     {
         $scheme = 'http';
+
         if ($context->has('HTTPS') && $context->get('HTTPS') !== 'off') {
             $scheme = 'https';
         }
 
         $host = '';
+
         if ($context->has('HTTP_HOST')) {
             $host = $context->get('HTTP_HOST');
         } elseif ($context->has('SERVER_NAME')) {
@@ -66,15 +71,18 @@ class Uri implements UriInterface
         $port = $context->get('SERVER_PORT');
 
         $pos = strpos($host, ':');
-        if ($pos !== false) {
+
+        if (false !== $pos) {
             $port = (int) substr($host, $pos + 1);
             $host = substr($host, 0, $pos);
         }
 
         $requestUri = $context->get('REQUEST_URI');
+
         if ($requestUri) {
             $pos = strpos($requestUri, '?');
-            if ($pos !== false) {
+
+            if (false !== $pos) {
                 $path = substr($requestUri, 0, $pos);
             } else {
                 $path = $requestUri;
@@ -124,11 +132,12 @@ class Uri implements UriInterface
         }
 
         $authority = $this->host;
+
         if ($userInfo = $this->getUserInfo()) {
             $authority = $userInfo . '@' . $this->host;
         }
 
-        if ($this->port !== null && $this->validatePort($this->scheme, $this->host, $this->port)) {
+        if (null !== $this->port && $this->validatePort($this->scheme, $this->host, $this->port)) {
             $authority .= ':' . $this->port;
         }
 
@@ -182,6 +191,7 @@ class Uri implements UriInterface
         $new = clone $this;
         $new->scheme = empty($scheme) ? '' : $new->normalizeScheme($scheme);
         $new->port = null;
+
         return $new;
     }
 
@@ -189,9 +199,11 @@ class Uri implements UriInterface
     {
         $new = clone $this;
         $new->user = $user;
-        if ($password !== null) {
+
+        if (null !== $password) {
             $new->pass = $password;
         }
+
         return $new;
     }
 
@@ -199,6 +211,7 @@ class Uri implements UriInterface
     {
         $new = clone $this;
         $new->host = $host;
+
         return $new;
     }
 
@@ -206,6 +219,7 @@ class Uri implements UriInterface
     {
         $new = clone $this;
         $new->port = $new->normalizePort($new->scheme, $new->host, $port);
+
         return $new;
     }
 
@@ -219,6 +233,7 @@ class Uri implements UriInterface
 
         $new = clone $this;
         $new->path = $new->normalizePath($path);
+
         return $new;
     }
 
@@ -236,6 +251,7 @@ class Uri implements UriInterface
 
         $new = clone $this;
         $new->query = $new->normalizeQueryAndFragment($query);
+
         return $new;
     }
 
@@ -253,6 +269,7 @@ class Uri implements UriInterface
 
         $new = clone $this;
         $new->fragment = $new->normalizeQueryAndFragment($fragment);
+
         return $new;
     }
 
@@ -283,18 +300,19 @@ class Uri implements UriInterface
             $uri .= $authority;
         }
 
-        if ($path != null) {
+        if (null != $path) {
             if ($uri && substr($path, 0, 1) !== '/') {
                 $uri .= '/';
             }
+
             $uri .= $path;
         }
 
-        if ($query != null) {
+        if (null != $query) {
             $uri .= '?' . $query;
         }
 
-        if ($fragment != null) {
+        if (null != $fragment) {
             $uri .= '#' . $fragment;
         }
 
@@ -308,6 +326,7 @@ class Uri implements UriInterface
         }
 
         $scheme = strtolower(str_replace('://', '', $scheme));
+
         if (!$this->validateScheme($scheme)) {
             throw new InvalidArgumentException('scheme of Uri must be a valid value');
         }
@@ -317,8 +336,8 @@ class Uri implements UriInterface
 
     protected function normalizePort($scheme, $host, $port)
     {
-        if ($port === null) {
-            return null;
+        if (null === $port) {
+            return;
         }
 
         $port = (int) $port;
@@ -335,6 +354,7 @@ class Uri implements UriInterface
     protected function normalizePath($path)
     {
         $preg = '/(?:[^' . self::$charsUnreserved . self::$charsSubDelim . ':@\/%]+|%(?![a-zA-Z0-9]{2}))/';
+
         return preg_replace_callback($preg, function ($matches) {
             return rawurlencode($matches[0]);
         }, $path);
@@ -343,6 +363,7 @@ class Uri implements UriInterface
     protected function normalizeQueryAndFragment($str)
     {
         $preg = '/(?:[^' . self::$charsUnreserved . self::$charsSubDelim . ':@\/%\?]+|%(?![A-Fa-f0-9]{2}))/';
+
         return preg_replace_callback($preg, function ($matches) {
             return rawurlencode($matches[0]);
         }, $str);
@@ -350,14 +371,16 @@ class Uri implements UriInterface
 
     protected function validateScheme($scheme)
     {
-        if ($scheme === '') {
+        if ('' === $scheme) {
             return true;
         }
 
         $validScheme = array_keys(static::$standardPort);
+
         if (in_array($scheme, $validScheme)) {
             return true;
         }
+
         return false;
     }
 
@@ -371,6 +394,6 @@ class Uri implements UriInterface
             return false;
         }
 
-        return !isset(static::$standardPort[$scheme]) || $port !== static::$standardPort[$scheme];
+        return !isset(static::$standardPort[$scheme]) || static::$standardPort[$scheme] !== $port;
     }
 }

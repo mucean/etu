@@ -1,5 +1,4 @@
 <?php
-
 namespace Etu\Traits;
 
 /**
@@ -33,6 +32,7 @@ trait Singleton
     public static function getInstance($params = [])
     {
         $classname = get_called_class();
+
         if (isset(static::$instances[$classname])) {
             return static::$instances[$classname];
         }
@@ -42,19 +42,6 @@ trait Singleton
         return static::$instances[$classname];
     }
 
-    protected function __construct()
-    {
-    }
-
-    /**
-     * reset middlewares
-     *
-     * @throws \Exception
-     * @return null
-     */
-    public function __clone()
-    {
-        $classname = get_called_class();
-        throw new \Exception('Clone ' . $classname . ' is not allowed!');
-    }
+    protected function __construct() {}
+    protected function __clone() {}
 }

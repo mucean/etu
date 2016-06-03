@@ -1,5 +1,4 @@
 <?php
-
 namespace tests\Traits;
 
 class ArrayPropertyAccessTest extends \PHPUnit_Framework_TestCase

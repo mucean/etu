@@ -1,10 +1,9 @@
 <?php
-
 namespace Etu\Http;
 
-use Psr\Http\Message\UploadedFileInterface;
 use Etu\Stream;
 use InvalidArgumentException;
+use Psr\Http\Message\UploadedFileInterface;
 use RuntimeException;
 
 class UploadedFile implements UploadedFileInterface
@@ -27,10 +26,12 @@ class UploadedFile implements UploadedFileInterface
     public static function parseFiles($files)
     {
         $parsedFiles = [];
+
         foreach ($files as $name => $file) {
             $parsedFiles[$name] = [];
+
             if (!is_array($file['error'])) {
-                $parsedFiles[$name] = new UploadedFile(
+                $parsedFiles[$name] = new self(
                     $file['tmp_name'],
                     isset($file['name']) ? $file['name'] : '',
                     isset($file['type']) ? $file['type'] : null,
@@ -41,6 +42,7 @@ class UploadedFile implements UploadedFileInterface
             } else {
                 $nextFiles = [];
                 $nextNames = array_keys($file['error']);
+
                 foreach ($nextNames as $nextName) {
                     $nextFiles[$nextName]['tmp_name'] = $file['tmp_name'][$nextName];
                     $nextFiles[$nextName]['name'] = $file['name'][$nextName];
@@ -48,6 +50,7 @@ class UploadedFile implements UploadedFileInterface
                     $nextFiles[$nextName]['size'] = $file['size'][$nextName];
                     $nextFiles[$nextName]['error'] = $file['error'][$nextName];
                 }
+
                 $parsedFiles[$name] = self::parseFiles($nextFiles);
             }
         }
@@ -77,7 +80,7 @@ class UploadedFile implements UploadedFileInterface
             throw new RuntimeException(sprintf('uploaded file %s has been moved', $this->name));
         }
 
-        if ($this->stream === null) {
+        if (null === $this->stream) {
             $this->stream = new Stream(fopen($this->tmpName, 'r'));
         }
 
@@ -91,6 +94,7 @@ class UploadedFile implements UploadedFileInterface
         }
 
         $targetDirName = dirname($targetPath);
+
         if (!is_writable($targetDirName)) {
             throw new InvalidArgumentException(sprintf(
                 '%s is not a writable path, uploaded file can not move to',
@@ -102,6 +106,7 @@ class UploadedFile implements UploadedFileInterface
             if (!copy($this->tmpName, $targetPath)) {
                 throw new RuntimeException('Occur error when moving file');
             }
+
             if (!unlink($this->tmpName)) {
                 throw new RuntimeException('Occur error when moving file');
             }
@@ -109,6 +114,7 @@ class UploadedFile implements UploadedFileInterface
             if (!is_uploaded_file($tmpName)) {
                 throw new RuntimeException(sprintf('%s is not uploaded file', $tmpName));
             }
+
             if (!move_uploaded_file($tmpName, $targetPath)) {
                 throw new RuntimeException('Occur error when moving file');
             }

@@ -1,5 +1,4 @@
 <?php
-
 namespace Tests\Http;
 
 use Etu\Http\Response;
@@ -10,6 +9,7 @@ class ResponseTest extends \PHPUnit_Framework_TestCase
     {
         $response = new Response();
         $this->assertInstanceOf('Etu\Http\Response', $response);
+
         return $response;
     }
 

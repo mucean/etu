@@ -1,9 +1,8 @@
 <?php
-
 namespace Etu;
 
-use Psr\Http\Message\StreamInterface;
 use InvalidArgumentException;
+use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 
 class Stream implements StreamInterface
@@ -23,14 +22,14 @@ class Stream implements StreamInterface
             'r' => true, 'w+' => true, 'r+' => true, 'x+' => true, 'c+' => true,
             'rb' => true, 'w+b' => true, 'r+b' => true, 'x+b' => true,
             'c+b' => true, 'rt' => true, 'w+t' => true, 'r+t' => true,
-            'x+t' => true, 'c+t' => true, 'a+' => true
+            'x+t' => true, 'c+t' => true, 'a+' => true,
         ],
         'write' => [
             'w' => true, 'w+' => true, 'rw' => true, 'r+' => true, 'x+' => true,
             'c+' => true, 'wb' => true, 'w+b' => true, 'r+b' => true,
             'x+b' => true, 'c+b' => true, 'w+t' => true, 'r+t' => true,
-            'x+t' => true, 'c+t' => true, 'a' => true, 'a+' => true
-        ]
+            'x+t' => true, 'c+t' => true, 'a' => true, 'a+' => true,
+        ],
     ];
 
     public function __construct($stream, $option = [])
@@ -46,6 +45,7 @@ class Stream implements StreamInterface
 
         try {
             $this->seek(0);
+
             return $this->getContents();
         } catch (RuntimeException $e) {
             return '';
@@ -57,6 +57,7 @@ class Stream implements StreamInterface
         if ($this->isAttached()) {
             fclose($this->stream);
         }
+
         $this->detach();
     }
 
@@ -86,7 +87,7 @@ class Stream implements StreamInterface
     public function detach()
     {
         if (!$this->isAttached()) {
-            return null;
+            return;
         }
 
         $stream = $this->stream;
@@ -98,12 +99,12 @@ class Stream implements StreamInterface
 
     public function getSize()
     {
-        if ($this->size !== null) {
+        if (null !== $this->size) {
             return $this->size;
         }
 
         if (!$this->isAttached()) {
-            return null;
+            return;
         }
 
         $stats = fstat($this->stream);
@@ -123,7 +124,7 @@ class Stream implements StreamInterface
 
         $position = ftell($this->stream);
 
-        if ($position === false) {
+        if (false === $position) {
             throw new RuntimeException('source can not tell you the position');
         }
 
@@ -137,11 +138,12 @@ class Stream implements StreamInterface
 
     public function isSeekable()
     {
-        if ($this->seekable !== null) {
+        if (null !== $this->seekable) {
             return $this->seekable;
         }
 
         $this->seekable = false;
+
         if ($this->isAttached()) {
             $this->seekable = $this->getMetadata('seekable');
         }
@@ -167,11 +169,12 @@ class Stream implements StreamInterface
 
     public function isWritable()
     {
-        if ($this->writeable !== null) {
+        if (null !== $this->writeable) {
             return $this->writeable;
         }
 
         $this->writeable = false;
+
         if ($this->isAttached()) {
             $metadata = $this->getMetadata();
             $this->writeable = isset(self::$readWriteHash['write'][$metadata['mode']]);
@@ -188,7 +191,7 @@ class Stream implements StreamInterface
 
         $res = fwrite($this->stream, $string);
 
-        if ($res === false) {
+        if (false === $res) {
             throw new RuntimeException('write to source failed');
         }
 
@@ -197,11 +200,12 @@ class Stream implements StreamInterface
 
     public function isReadable()
     {
-        if ($this->readable !== null) {
+        if (null !== $this->readable) {
             return $this->readable;
         }
 
         $this->readable = false;
+
         if ($this->isAttached()) {
             $metadata = $this->getMetadata();
             $this->readable = isset(self::$readWriteHash['read'][$metadata['mode']]);
@@ -218,7 +222,7 @@ class Stream implements StreamInterface
 
         $res = fread($this->stream, $length);
 
-        if ($res === false) {
+        if (false === $res) {
             throw new RuntimeException('read from source failed');
         }
 
@@ -240,9 +244,10 @@ class Stream implements StreamInterface
             return $key ? null : [];
         }
 
-        if ($this->metadata === null) {
+        if (null === $this->metadata) {
             $this->metadata = stream_get_meta_data($this->stream);
-            if ($this->customMetadata !== null) {
+
+            if (null !== $this->customMetadata) {
                 $this->metadata += $this->customMetadata;
             }
         }

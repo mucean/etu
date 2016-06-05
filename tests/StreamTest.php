@@ -15,7 +15,7 @@ class StreamTest extends \PHPUnit_Framework_TestCase
     {
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $this->str);
-        rewinddir($stream);
+        rewind($stream);
         $this->stream = new Stream($stream);
     }
 
@@ -134,7 +134,7 @@ class StreamTest extends \PHPUnit_Framework_TestCase
     {
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $this->str);
-        rewinddir($stream);
+        rewind($stream);
         $metadata = stream_get_meta_data($stream);
         $this->assertEquals($this->stream->getMetadata(), $metadata);
         $this->assertEquals($this->stream->getMetadata('uri'), $metadata['uri']);

@@ -40,6 +40,8 @@ class Container
             }
             call_user_func_array([$this, 'add'], $item);
         }
+
+        $this->registerDefaultServices();
     }
 
     public function get($id)
@@ -50,12 +52,12 @@ class Container
 
         $value = $this->getProperty('container', [$id]);
 
-        if (is_callable($value) && !$this->hasProperty('calls')) {
+        if (is_callable($value) && !$this->hasProperty('calls', [$id])) {
             $call = $value;
-            $value = call_user_func_array($value);
-            if (!$this->hasProperty('mantain', $id)) {
-                $this->setProperty('calls', $id, $call);
-                $this->add($id, $value, false);
+            $value = call_user_func($value);
+            if (!$this->hasProperty('mantain', [$id])) {
+                $this->setProperty('calls', [$id], $call);
+                $this->setProperty('container', [$id], $value);
             }
         }
 
@@ -69,8 +71,12 @@ class Container
 
     public function add($id, $value, $bindThis = true)
     {
+        if ($this->has($id)) {
+            $this->remove($id);
+        }
+
         if ($bindThis && is_callable($value) && ($value instanceof Closure)) {
-            $value->bindTo($this);
+            $value = $value->bindTo($this);
         }
 
         $this->setProperty('container', [$id], $value);
@@ -86,7 +92,9 @@ class Container
     public function getCalledCall($id)
     {
         if (!$this->hasProperty('calls', [$id])) {
-            throw new InvalidArgumentException(sprintf('Identifier %s is not found', $id));
+            throw new InvalidArgumentException(
+                sprintf('Identifier %s is not found or not called', $id)
+            );
         }
 
         return $this->getProperty('calls', [$id]);
@@ -98,12 +106,16 @@ class Container
             throw new InvalidArgumentException(sprintf('Identifier %s is not found', $id));
         }
 
+        if ($this->hasProperty('calls', [$id])) {
+            throw new InvalidArgumentException('service has been called, can not mantain');
+        }
+
         $value = $this->getProperty('container', [$id]);
         if (!is_callable($value)) {
             throw new InvalidArgumentException('mantain service must be a callable function or object');
         }
 
-        $this->setProperty('mantain', $id, true);
+        $this->setProperty('mantain', [$id], true);
     }
 
     protected function registerDefaultServices()

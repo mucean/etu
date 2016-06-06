@@ -52,11 +52,13 @@ class Request extends Message implements ServerRequestInterface
         array $uploadedFiles = []
     ) {
         $this->servers = $servers;
+        $this->registerPropertyAccess('servers');
+
         $this->cookies = $cookies;
         $this->body = $body;
         $this->uri = $uri;
         $this->uploadedFiles = $uploadedFiles;
-        $this->originalMethod = $this->servers['REQUEST_METHOD'];
+        $this->originalMethod = $this->get('servers', ['REQUEST_METHOD'], '');
         $this->setHeaders(getallheaders($this->servers));
 
         if (!$this->hasHeader('host') && isset($_SERVER['SERVER_NAME'])) {
@@ -99,8 +101,6 @@ class Request extends Message implements ServerRequestInterface
 
             return $result;
         });
-
-        $this->registerPropertyAccess('servers');
     }
 
     public function getServerParams()

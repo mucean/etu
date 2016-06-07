@@ -17,14 +17,25 @@ class Middleware
      */
     protected $middlewares = [];
 
+    protected $bindThis;
+
+    public function __construct(Object $bindThis = null)
+    {
+        $this->bindThis = $bindThis;
+    }
+
     /**
      * add middleware wate to exec
      *
      * @param  callable $middleware
      * @return null
      */
-    public function insert(callable $middleware)
+    public function add(callable $middleware, $isBind = false)
     {
+        if ($isBind && ($middleware instanceof \Closure)) {
+            $middleware = $middleware->bindTo($this->bindThis);
+        }
+
         $this->middlewares[] = $middleware;
     }
 
@@ -33,18 +44,19 @@ class Middleware
      *
      * @return null
      */
-    public function execute()
+    public function execute($arguments = [])
     {
-        $afterExecs = [];
+        $nextExecs = [];
 
         foreach ($this->middlewares as $middleware) {
-            $res = call_user_func_array($middleware, []);
+            $res = call_user_func_array($middleware, $arguments);
 
             if ($res instanceof \Generator) {
-                $afterExecs[] = $res;
+                $nextExecs[] = $res;
             }
         }
-        while (($handle = array_pop($afterExecs)) !== null) {
+
+        while (($handle = array_pop($nextExecs)) !== null) {
             $handle->next();
         }
     }

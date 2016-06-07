@@ -138,4 +138,35 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         );
         $container->mantain($iden);
     }
+
+    /**
+     * @depends testConstruct
+     */
+    public function testUpdate(Container $container)
+    {
+        $context = $container->get('context');
+        $iden = 'Closure';
+        $value = function () {
+            return $this->get('context');
+        };
+        $container->add($iden, $value);
+        $this->assertEquals($context, $container->get($iden));
+        $updateValue = 'Hello, world!';
+        $container->update($iden, $updateValue);
+        $this->assertEquals($updateValue, $container->get($iden));
+        $this->assertInstanceOf('Closure', $container->getCalledCall($iden));
+    }
+
+    /**
+     * @depends testConstruct
+     */
+    public function testUpdateException(Container $container)
+    {
+        $iden = 'errorId';
+        $this->setExpectedException(
+            'InvalidArgumentException',
+            sprintf('Identifier %s is not found', $iden)
+        );
+        $container->update($iden, 'error');
+    }
 }

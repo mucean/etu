@@ -7,6 +7,7 @@ use Etu\Http\Response;
 use Etu\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Etu\Container;
 
 class Application
 {
@@ -22,11 +23,14 @@ class Application
      *
      * @var \Etu\Middleware
      */
-    protected $middleware = null;
+    protected $middleware;
+
+    protected $container;
 
     public function __construct()
     {
-        $this->middleware = new Middleware();
+        $this->container = Container::getInstance();
+        $this->middleware = new Middleware($this->container);
     }
 
     /**
@@ -36,23 +40,12 @@ class Application
      */
     public function run()
     {
-        $context = new Context($_SERVER);
-        $request = Request::buildFromContext($context);
-        $response = new Response();
+        $request = $this->container->get('request');
+        $response = $this->container->get('response');
 
-        try {
-            $this->middlewar->execute();
-        } catch (\Exception $e) {
-            $handler = $this->exceptionHandler;
+        $response = $this->process($request, $response);
 
-            if (null === $handler) {
-                $handler = function () use ($request, $response) {
-                    // todo handle exception
-                };
-            }
-
-            call_user_func_array($handler, [$e]);
-        }
+        return $response;
     }
 
     public function process(ServerRequestInterface $request, Response $response)
@@ -60,6 +53,11 @@ class Application
         $request;
 
         return $response;
+    }
+
+    public function addMiddleware(callable $middleware)
+    {
+        $this->middleware->add($middleware);
     }
 
     /**

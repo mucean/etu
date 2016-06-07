@@ -82,6 +82,15 @@ class Container
         $this->setProperty('container', [$id], $value);
     }
 
+    public function update($id, $value)
+    {
+        if (!$this->has($id)) {
+            throw new InvalidArgumentException(sprintf('Identifier %s is not found', $id));
+        }
+
+        $this->setProperty('container', [$id], $value);
+    }
+
     public function remove($id)
     {
         $this->unsetProperty('container', [$id]);

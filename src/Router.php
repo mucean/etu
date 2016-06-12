@@ -2,16 +2,22 @@
 
 namespace Etu;
 
-use Etu\Middleware;
+use Etu\Traits\Middleware;
 use Etu\Container;
 
 class Router
 {
-    protected $middleware;
+    use Middleware;
 
-    public function __construct()
+    protected $container;
+
+    public function __construct(Container $container = null)
     {
-        $this->middleware = new Middleware(Container::getInstance());
+        if ($container === null) {
+            $container = Container::getInstance();
+        }
+
+        $this->container = $container;
     }
 
     public function execute()

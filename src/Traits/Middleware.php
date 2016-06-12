@@ -1,5 +1,5 @@
 <?php
-namespace Etu;
+namespace Etu\Traits;
 
 /**
  * a middleware package
@@ -8,7 +8,7 @@ namespace Etu;
  * @subpackage none
  * @author mucean
  */
-class Middleware
+trait Middleware
 {
     /**
      * middlewares of wating to exec
@@ -17,25 +17,14 @@ class Middleware
      */
     protected $middlewares = [];
 
-    protected $bindThis;
-
-    public function __construct(Object $bindThis = null)
-    {
-        $this->bindThis = $bindThis;
-    }
-
     /**
      * add middleware wate to exec
      *
      * @param  callable $middleware
      * @return null
      */
-    public function add(callable $middleware, $isBind = false)
+    protected function addMiddleware(callable $middleware)
     {
-        if ($isBind && ($middleware instanceof \Closure)) {
-            $middleware = $middleware->bindTo($this->bindThis);
-        }
-
         $this->middlewares[] = $middleware;
     }
 
@@ -44,14 +33,14 @@ class Middleware
      *
      * @return null
      */
-    public function execute($arguments = [])
+    public function executeMiddleware($arguments = [])
     {
         $nextExecs = [];
 
         foreach ($this->middlewares as $middleware) {
             $res = call_user_func_array($middleware, $arguments);
 
-            if ($res instanceof \Generator) {
+            if ($res instanceof \Generator && $res->current()) {
                 $nextExecs[] = $res;
             }
         }
@@ -66,7 +55,7 @@ class Middleware
      *
      * @return null
      */
-    public function reset()
+    protected function resetMiddleware()
     {
         $this->middlewares = [];
     }

@@ -4,13 +4,15 @@ namespace Etu;
 use Etu\Http\Context;
 use Etu\Http\Request;
 use Etu\Http\Response;
-use Etu\Middleware;
+use Etu\Traits\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Etu\Container;
 
 class Application
 {
+    use Middleware;
+
     /**
      * handle exception if $this->start()
      *
@@ -18,19 +20,11 @@ class Application
      */
     protected $exceptionHandler = null;
 
-    /**
-     * middleware class
-     *
-     * @var \Etu\Middleware
-     */
-    protected $middleware;
-
     protected $container;
 
     public function __construct()
     {
         $this->container = Container::getInstance();
-        $this->middleware = new Middleware($this->container);
     }
 
     /**
@@ -55,9 +49,9 @@ class Application
         return $response;
     }
 
-    public function addMiddleware(callable $middleware)
+    public function add(callable $middleware)
     {
-        $this->middleware->add($middleware);
+        $this->addMiddleware($middleware);
     }
 
     /**

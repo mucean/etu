@@ -22,5 +22,16 @@ class Router
 
     public function execute()
     {
+        $this->setKernel($this);
+
+        $this->executeMiddleware(
+            $this->container->get('request'),
+            $this->container->get('response')
+        );
+    }
+
+    public function __invoke(RequestInterface $request, ResponseInterface $response)
+    {
+        $requestPath = $request->getUri()->getPath();
     }
 }

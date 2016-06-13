@@ -18,26 +18,35 @@ class MiddlewareTest extends \PHPUnit_Framework_TestCase
     public function testAddMiddleware()
     {
         $func1 = function () {
-            $this->hello = 'hello';
+            $this->hello = '1';
             yield true;
-            $this->hello .= ', world';
+            $this->hello .= ' 5';
         };
         $func1 = $func1->bindTo($this, $this);
 
         $func2 = function () {
-            $this->hello .= ', mucean';
+            $this->hello .= ' 2';
+            yield true;
+            $this->hello .= ' 4';
         };
         $func2 = $func2->bindTo($this, $this);
+
+        $func3 = function () {
+            $this->hello .= ' 3';
+        };
+        $func3 = $func3->bindTo($this, $this);
 
         $this->addMiddleware($func1);
 
         $this->addMiddleware($func2);
+
+        $this->addMiddleware($func3);
     }
 
     public function testExecuteMiddleware()
     {
         $this->executeMiddleware();
 
-        $this->assertEquals($this->hello, 'hello, mucean, world');
+        $this->assertEquals($this->hello, '1 2 3 4 5');
     }
 }

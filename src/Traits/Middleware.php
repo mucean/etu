@@ -17,6 +17,8 @@ trait Middleware
      */
     protected $middlewares = [];
 
+    protected $kernel;
+
     /**
      * add middleware wate to exec
      *
@@ -26,6 +28,11 @@ trait Middleware
     protected function addMiddleware(callable $middleware)
     {
         $this->middlewares[] = $middleware;
+    }
+
+    protected function setKernel(callable $kernel)
+    {
+        $this->kernel = $kernel;
     }
 
     /**
@@ -43,6 +50,10 @@ trait Middleware
             if ($res instanceof \Generator && $res->current()) {
                 $nextExecs[] = $res;
             }
+        }
+
+        if ($this->kernel !== null) {
+            call_user_func_array($this->kernel, $arguments);
         }
 
         while (($handle = array_pop($nextExecs)) !== null) {

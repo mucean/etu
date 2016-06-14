@@ -1,6 +1,11 @@
 <?php
 namespace Etu\Traits;
 
+use RuntimeException;
+use UnexpectedValueException;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
 /**
  * a middleware package
  *
@@ -17,7 +22,7 @@ trait Middleware
      */
     protected $middlewares = [];
 
-    protected $kernel;
+    protected $locked = false;
 
     /**
      * add middleware wate to exec
@@ -27,12 +32,45 @@ trait Middleware
      */
     protected function addMiddleware(callable $middleware)
     {
-        $this->middlewares[] = $middleware;
+        if ($this->locked) {
+            throw new RuntimeException('can not add when middleware is execute');
+        }
+
+        if ($this->middlewares === []) {
+            $this->prepareMiddlewares();
+        }
+
+        $next = $this->middlewares[0];
+
+        array_unshift(
+            $this->middlewares,
+            function (RequestInterface $request, ResponseInterface $response) use ($middleware, $next) {
+                $result = call_user_func($middleware, $request, $response, $next);
+
+                if (!$result instanceof ResponseInterface) {
+                    throw new UnexpectedValueException(
+                        'value of middleware returned must instance of \Psr\Http\Message\ResponseInterface'
+                    );
+                }
+
+                return $result;
+            }
+        );
+
+        return $this;
     }
 
-    protected function setKernel(callable $kernel)
+    protected function prepareMiddlewares(callable $kernel = null)
     {
-        $this->kernel = $kernel;
+        if ($this->middlewares !== []) {
+            throw new RuntimeException('prepare middleware can only be called once');
+        }
+
+        if ($kernel === null) {
+            $kernel = $this;
+        }
+
+        $this->middlewares[] = $kernel;
     }
 
     /**
@@ -40,25 +78,17 @@ trait Middleware
      *
      * @return null
      */
-    public function executeMiddleware($arguments = [])
+    public function executeMiddleware(RequestInterface $request, ResponseInterface $response)
     {
-        $nextExecs = [];
-
-        foreach ($this->middlewares as $middleware) {
-            $res = call_user_func_array($middleware, $arguments);
-
-            if ($res instanceof \Generator && $res->current()) {
-                $nextExecs[] = $res;
-            }
+        if ($this->middlewares === []) {
+            $this->prepareMiddlewares();
         }
 
-        if ($this->kernel !== null) {
-            call_user_func_array($this->kernel, $arguments);
-        }
+        $this->locked = true;
+        $result = $this->middlewares[0]($request, $response);
+        $this->locked = false;
 
-        while (($handle = array_pop($nextExecs)) !== null) {
-            $handle->next();
-        }
+        return $result;
     }
 
     /**

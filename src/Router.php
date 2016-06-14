@@ -4,6 +4,8 @@ namespace Etu;
 
 use Etu\Traits\Middleware;
 use Etu\Container;
+use RuntimeException;
+use Closure;
 
 class Router
 {
@@ -29,6 +31,17 @@ class Router
         $this->container = $container;
     }
 
+    public function add(callable $middleware)
+    {
+        if ($middleware instanceof Closure) {
+            $middleware = $middleware->bindTo($this->container);
+        }
+
+        $this->addMiddleware($middleware);
+
+        return $this;
+    }
+
     public function withRewrite(array $rewrites)
     {
         $this->rewrites = $rewrites;
@@ -43,11 +56,7 @@ class Router
 
     public function execute()
     {
-        if ($this->kernel !== null) {
-            $this->setKernel($this);
-        }
-
-        $this->executeMiddleware(
+        return $this->executeMiddleware(
             $this->container->get('request'),
             $this->container->get('response')
         );

@@ -54,26 +54,29 @@ class Router
         return $this;
     }
 
-    public function execute()
+    public function execute(RequestInterface $request, ResponseInterface $response)
     {
-        return $this->executeMiddleware(
-            $this->container->get('request'),
-            $this->container->get('response')
-        );
+        return $this->executeMiddleware($request, $response);
     }
 
     public function __invoke(RequestInterface $request, ResponseInterface $response)
     {
         $requestPath = $request->getUri()->getPath();
         $requestMethod = strtolower($request->getMethod());
-
         list($realPath, $arguments) = $this->rewrite($requestPath);
-        $mapClass = $this->namespace . '\\' . str_replace('/', '\\', $this->basePath . $realPath);
+        if ($realPath === '/') {
+            $realPath = '/index';
+        }
+        // $mapClass = $this->namespace . '\\' . str_replace('/', '\\', $this->basePath . $realPath);
+        $mapClass = $this->mapClass($this->basePath . $realPath);
         if (!class_exists($mapClass)) {
             throw new RuntimeException();
         }
 
         $controller = new $mapClass();
+
+        $controller->request = $request;
+        $controller->response = $response;
 
         if (!is_callable([$controller, $requestMethod])) {
             throw new RuntimeException();
@@ -104,5 +107,18 @@ class Router
         }
 
         return [$realPath, $arguments];
+    }
+
+    protected function mapClass($requestPath)
+    {
+        $requestPath = trim($requestPath, '/');
+
+        $eachPath = explode('/', $requestPath);
+
+        array_walk($eachPath, function (&$item) {
+            ucfirst($item);
+        });
+
+        return '\\' . implode('\\', $eachPath);
     }
 }

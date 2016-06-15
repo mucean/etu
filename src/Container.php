@@ -8,6 +8,7 @@ use Etu\Http\Request;
 use Etu\Http\Response;
 use Closure;
 use InvalidArgumentException;
+use Etu\Router;
 
 class Container
 {
@@ -141,5 +142,9 @@ class Container
         $this->add('response', function () {
             return new Response();
         }, false);
+
+        $this->add('router', function () {
+            return new Router($this->get('request'), $this->get('response'));
+        });
     }
 }

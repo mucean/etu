@@ -39,19 +39,25 @@ class Application
 
         $response = $this->process($request, $response);
 
-        return $response;
+        $this->response($response);
     }
 
-    public function process(ServerRequestInterface $request, Response $response)
+    public function process(ServerRequestInterface $request, ResponseInterface $response)
     {
-        $request;
+        $router = $this->container->get('router');
+var_dump($router);exit;
+        return $router->execute($request, $response);
+    }
 
-        return $response;
+    public function response(ResponseInterface $response)
+    {
+        echo $response->getBody();
     }
 
     public function add(callable $middleware)
     {
         $this->addMiddleware($middleware);
+        return $this;
     }
 
     /**

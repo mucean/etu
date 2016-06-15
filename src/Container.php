@@ -6,9 +6,9 @@ use Etu\Traits\Singleton;
 use Etu\Http\Context;
 use Etu\Http\Request;
 use Etu\Http\Response;
+use Etu\Router;
 use Closure;
 use InvalidArgumentException;
-use Etu\Router;
 
 class Container
 {
@@ -45,7 +45,7 @@ class Container
         $this->registerDefaultServices();
     }
 
-    public function get($id)
+    public function get($id, $arguments = [])
     {
         if (!$this->has($id)) {
             throw new InvalidArgumentException(sprintf('Identifier %s is not found', $id));
@@ -55,7 +55,7 @@ class Container
 
         if (is_callable($value) && !$this->hasProperty('calls', [$id])) {
             $call = $value;
-            $value = call_user_func($value);
+            $value = call_user_func_array($value, $arguments);
             if (!$this->hasProperty('mantain', [$id])) {
                 $this->setProperty('calls', [$id], $call);
                 $this->setProperty('container', [$id], $value);
@@ -143,8 +143,8 @@ class Container
             return new Response();
         }, false);
 
-        $this->add('router', function () {
-            return new Router($this->get('request'), $this->get('response'));
-        });
+        $this->add('router', function ($path = '/Controller', $namespace = '\\') {
+            return new Router($path, $namespace);
+        }, false);
     }
 }

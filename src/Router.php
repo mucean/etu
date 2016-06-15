@@ -2,6 +2,8 @@
 
 namespace Etu;
 
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Etu\Traits\Middleware;
 use Etu\Container;
 use RuntimeException;
@@ -67,7 +69,7 @@ class Router
         if ($realPath === '/') {
             $realPath = '/index';
         }
-        // $mapClass = $this->namespace . '\\' . str_replace('/', '\\', $this->basePath . $realPath);
+
         $mapClass = $this->mapClass($this->basePath . $realPath);
         if (!class_exists($mapClass)) {
             throw new RuntimeException();
@@ -82,12 +84,12 @@ class Router
             throw new RuntimeException();
         }
 
-        $res= call_user_func_array([$controller, $requestMethod], $arguments);
+        $res = call_user_func_array([$controller, $requestMethod], $arguments);
 
         if ($res instanceof ResponseInterface) {
             $response = $res;
         } else {
-            $response = $this->container->get('response');
+            $response = $controller->response;
         }
 
         return $response;
@@ -116,9 +118,10 @@ class Router
         $eachPath = explode('/', $requestPath);
 
         array_walk($eachPath, function (&$item) {
-            ucfirst($item);
+            $item = ucfirst($item);
         });
 
-        return '\\' . implode('\\', $eachPath);
+        $separator = $this->namespace === '\\' ? '' : '\\';
+        return $this->namespace . $separator . implode('\\', $eachPath);
     }
 }

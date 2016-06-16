@@ -45,7 +45,7 @@ class Application
     public function process(ServerRequestInterface $request, ResponseInterface $response)
     {
         $router = $this->container->get('router');
-// var_dump($router);exit;
+
         return $router->execute($request, $response);
     }
 

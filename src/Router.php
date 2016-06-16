@@ -71,18 +71,14 @@ class Router
         }
 
         $mapClass = $this->mapClass($this->basePath . $realPath);
-        if (!class_exists($mapClass)) {
-            throw new RuntimeException();
+        if (!class_exists($mapClass) || !is_callable([$mapClass, $requestMethod])) {
+            throw new RuntimeException('Request can not be processed', 404);
         }
 
         $controller = new $mapClass();
 
         $controller->request = $request;
         $controller->response = $response;
-
-        if (!is_callable([$controller, $requestMethod])) {
-            throw new RuntimeException();
-        }
 
         $res = call_user_func_array([$controller, $requestMethod], $arguments);
 

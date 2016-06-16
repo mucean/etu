@@ -44,9 +44,7 @@ class Application
 
     public function process(ServerRequestInterface $request, ResponseInterface $response)
     {
-        $router = $this->container->get('router');
-
-        return $router->execute($request, $response);
+        return $this->executeMiddleware($request, $response);
     }
 
     public function response(ResponseInterface $response)
@@ -56,6 +54,10 @@ class Application
 
     public function add(callable $middleware)
     {
+        if ($middleware instanceof \Closure) {
+            $middleware = $middleware->bindTo($this);
+        }
+
         $this->addMiddleware($middleware);
         return $this;
     }
@@ -67,7 +69,31 @@ class Application
      **/
     public function setExceptionHandler(callable $handler)
     {
+        if ($handler instanceof \Closure) {
+            $handler = $handler->bindTo($this);
+        }
+
         $this->exceptionHandler = $handler;
+    }
+
+    public function handleException(Exception $e)
+    {
+        if ($this->exceptionHandler === null) {
+            $this->setExceptionHandler(function (
+                Exception $e,
+                ServerRequestInterface $request,
+                ResponseInterface $response
+            ) {
+                //todo
+            });
+        }
+    }
+
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response)
+    {
+        $router = $this->container->get('router');
+
+        return $router->execute($request, $response);
     }
 
     /**

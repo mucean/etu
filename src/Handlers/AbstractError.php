@@ -49,7 +49,7 @@ abstract class AbstractError extends AbstractThrowable
             $text .= PHP_EOL . sprintf('    trace: %s', $trace);
         }
 
-        return $error->getMessage();
+        return $text;
     }
 
     protected function writeToErrorLog($message)

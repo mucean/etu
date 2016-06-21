@@ -6,6 +6,7 @@ use Etu\Traits\Singleton;
 use Etu\Http\Context;
 use Etu\Http\Request;
 use Etu\Http\Response;
+use Etu\Handlers\Error;
 use Etu\Router;
 use Closure;
 use InvalidArgumentException;
@@ -25,6 +26,10 @@ class Container
 
     protected $calls = [];
 
+    protected $defaultSetting = [
+        'showErrorDetails' => false
+    ];
+
     protected function __construct(array $items)
     {
         $this->registerPropertyAccess('container', true);
@@ -32,6 +37,20 @@ class Container
         $this->registerPropertyAccess('mantain', true);
 
         $this->registerPropertyAccess('calls', true);
+
+        $setting = $this->defaultSetting;
+        if (isset($item['setting'])) {
+            $setting = array_merge($setting, $item['setting']);
+            unset($item['setting']);
+        }
+
+        $this->add(
+            'setting',
+            function () use ($setting) {
+                return new ArrayAccess($setting);
+            },
+            false
+        );
 
         foreach ($items as $item) {
             if (!is_array($item)) {
@@ -146,5 +165,10 @@ class Container
         $this->add('router', function ($path = '/Controller', $namespace = '\\') {
             return new Router($path, $namespace);
         }, false);
+
+        $this->add('errorHandler', function () {
+            $setting = $this->get('setting');
+            return new Error($setting->get('showErrorDetails', false));
+        });
     }
 }

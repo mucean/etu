@@ -8,26 +8,21 @@ use Etu\Stream;
 class Error extends AbstractError
 {
     public function __invoke(
-        \Error $error,
+        \Throwable $error,
         ServerRequestInterface $request,
         ResponseInterface $response
     ) {
         $contentType = $this->responseContentType($request);
 
-        switch ($contentType) {
-            case 'application/json':
-                $message = $this->renderJsonError($error);
-                break;
-            
-            case 'text/xml':
-            case 'application/xml':
-                $message = $this->renderXmlError($error);
-                break;
-            
-            default:
-                $message = $this->renderHtmlError($error);
-                break;
+        $renderMethodName = isset($this->knownContentType[$contentType])
+            ? $this->knownContentType[$contentType]
+            : 'renderHtmlError';
+
+        if (!method_exists($this, $renderMethodName)) {
+            throw new RuntimeException(sprintf('%s method do not exists', $renderMethodName));
         }
+
+        $message = $this->$renderMethodName($error);
 
         $body = new Stream(fopen('php://temp', 'r+'));
         $body->write($message);
@@ -56,7 +51,7 @@ class Error extends AbstractError
         }
 
         if ($trace = $error->getTraceAsString()) {
-            $text .= '<br>' . sprintf('trace: %s', $trace);
+            $text .= sprintf('<br>trace: <br><pre>%s</pre>', $trace);
         }
 
         return $text;

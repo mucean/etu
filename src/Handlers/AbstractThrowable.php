@@ -30,10 +30,7 @@ abstract class AbstractThrowable
 
         if (isset($acceptedContentType[0])) {
             $contentType = $acceptedContentType[0];
-        }
-
-        // handle with +json or +xml accept
-        if (preg_match('/\+(json|xml)/', $acceptHeader, $matches)) {
+        } elseif (preg_match('/\+(json|xml)/', $acceptHeader, $matches)) { // handle with +json or +xml accept
             $pregType = sprintf('application/%s', $matches[1]);
             if (in_array($pregType, $knownContentType)) {
                 $contentType = $pregType;

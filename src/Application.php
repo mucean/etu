@@ -44,7 +44,13 @@ class Application
 
     public function process(ServerRequestInterface $request, ResponseInterface $response)
     {
-        return $this->executeMiddleware($request, $response);
+        try {
+            $this->executeMiddleware($request, $response);
+        } catch (\Throwable $error) {
+            $response = $this->handlerError($error, $request, $response);
+        }
+
+        return $response;
     }
 
     public function response(ResponseInterface $response)
@@ -76,17 +82,21 @@ class Application
         $this->exceptionHandler = $handler;
     }
 
-    public function handleException(Exception $e)
+    // public function handleException(\Exception $excep, ServerRequestInterface $request, Response $response)
+    // {
+    // }
+
+    public function handlerError(\Throwable $error, ServerRequestInterface $request, ResponseInterface $response)
     {
-        if ($this->exceptionHandler === null) {
-            $this->setExceptionHandler(function (
-                Exception $e,
-                ServerRequestInterface $request,
-                ResponseInterface $response
-            ) {
-                //todo
-            });
+        $handler = 'errorHandler';
+
+        if (!$this->container->has($handler)) {
+            throw $error;
         }
+
+        $parameters = [$error, $request, $response];
+
+        return call_user_func_array($this->container->get($handler), $parameters);
     }
 
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response)

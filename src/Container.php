@@ -53,9 +53,9 @@ class Container
         );
 
         foreach ($items as $item) {
-            if (!is_array($item)) {
+            if (!is_array($item) || count($item) < 2) {
                 throw new InvalidArgumentException(
-                    'Container construct each item of array argument must be an array type'
+                    'Container construct each item of array argument must be an array type and more than two element'
                 );
             }
             call_user_func_array([$this, 'add'], $item);
@@ -99,7 +99,7 @@ class Container
             $value = $value->bindTo($this);
         }
 
-        $this->setProperty('container', [$id], $value);
+        return $this->setProperty('container', [$id], $value);
     }
 
     public function update($id, $value)
@@ -108,7 +108,7 @@ class Container
             throw new InvalidArgumentException(sprintf('Identifier %s is not found', $id));
         }
 
-        $this->setProperty('container', [$id], $value);
+        return $this->setProperty('container', [$id], $value);
     }
 
     public function remove($id)
@@ -149,26 +149,36 @@ class Container
 
     protected function registerDefaultServices()
     {
-        $this->add('context', function () {
-            return new Context($_SERVER);
-        }, false);
+        if (!$this->has('context')) {
+            $this->add('context', function () {
+                return new Context($_SERVER);
+            }, false);
+        }
 
-        $this->add('request', function () {
-            $context = $this->get('context');
-            return Request::buildFromContext($context);
-        });
+        if (!$this->has('request')) {
+            $this->add('request', function () {
+                $context = $this->get('context');
+                return Request::buildFromContext($context);
+            });
+        }
 
-        $this->add('response', function () {
-            return new Response();
-        }, false);
+        if (!$this->has('response')) {
+            $this->add('response', function () {
+                return new Response();
+            }, false);
+        }
 
-        $this->add('router', function ($path = '/Controller', $namespace = '\\') {
-            return new Router($path, $namespace);
-        }, false);
+        if (!$this->has('router')) {
+            $this->add('router', function ($path = '/Controller', $namespace = '\\') {
+                return new Router($path, $namespace);
+            }, false);
+        }
 
-        $this->add('errorHandler', function () {
-            $setting = $this->get('setting');
-            return new Error($setting->get('showErrorDetails', false));
-        });
+        if (!$this->has('errorHandler')) {
+            $this->add('errorHandler', function () {
+                $setting = $this->get('setting');
+                return new Error($setting->get('showErrorDetails', false));
+            });
+        }
     }
 }

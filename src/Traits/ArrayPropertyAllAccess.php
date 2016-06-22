@@ -26,9 +26,12 @@ trait ArrayPropertyAllAccess
         }
 
         $data = $value;
+
+        return $this;
     }
 
-    function unset($propertyName, array $accessPath) {
+    function unset($propertyName, array $accessPath)
+    {
         $this->permissionValidate($propertyName, ['isWriteOperate' => true, 'throwException' => true]);
 
         if ([] === $accessPath) {

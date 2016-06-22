@@ -25,14 +25,14 @@ class Application
     public function __construct($container = [])
     {
         if (is_array($container)) {
-            $container = Container::getInstance([$container]);
+            $container = Container::getInstance($container);
         }
 
         if (!($container instanceof Container)) {
             throw new InvalidArgumentException('A container expected');
         }
 
-        $this->container = Container::getInstance([$container]);
+        $this->container = $container;
     }
 
     /**

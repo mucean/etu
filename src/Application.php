@@ -22,9 +22,17 @@ class Application
 
     protected $container;
 
-    public function __construct()
+    public function __construct($container = [])
     {
-        $this->container = Container::getInstance();
+        if (is_array($container)) {
+            $container = Container::getInstance([$container]);
+        }
+
+        if (!($container instanceof Container)) {
+            throw new InvalidArgumentException('A container expected');
+        }
+
+        $this->container = Container::getInstance([$container]);
     }
 
     /**

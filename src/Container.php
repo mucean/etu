@@ -39,9 +39,9 @@ class Container
         $this->registerPropertyAccess('calls', true);
 
         $setting = $this->defaultSetting;
-        if (isset($item['setting'])) {
-            $setting = array_merge($setting, $item['setting']);
-            unset($item['setting']);
+        if (isset($items['setting'])) {
+            $setting = array_merge($setting, $items['setting']);
+            unset($items['setting']);
         }
 
         $this->add(

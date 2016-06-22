@@ -27,10 +27,38 @@ class Error extends AbstractError
         $body = new Stream(fopen('php://temp', 'r+'));
         $body->write($message);
 
-        return $response->withBody($body);
+        $this->logError($error);
+
+        return $response
+            ->withBody($body)
+            ->withStatus(500)
+            ->withHeader('Content-type', $contentType);
     }
 
     protected function renderHtmlError($error)
+    {
+        $title = 'A error has occured<br>';
+
+        if ($this->showErrorDetails) {
+            $body = '<h2>Details</h2>';
+            $body .= $this->renderHtml($error);
+
+            while ($previous = $error->getPrevious()) {
+                $body .= sprintf(
+                    '<div>Previous:</div>%s',
+                    $previous
+                );
+            }
+        }
+
+        return sprintf(
+            '<html><head><title>%s</title></head><body>%s</body></html>',
+            $title,
+            $body
+        );
+    }
+
+    protected function renderHtml($error)
     {
         $text = sprintf('Error type: %s', get_class($error));
 

@@ -27,26 +27,26 @@ abstract class AbstractError extends AbstractThrowable
 
     protected function getErrorMessage(\Throwable $error)
     {
-        $text = sprintf('Error type: %s', get_class($error));
+        $text = PHP_EOL . sprintf('Error type: %s', get_class($error));
 
         if ($message = $error->getMessage()) {
-            $text .= PHP_EOL . sprintf('    message: %s', $message);
+            $text .= PHP_EOL . sprintf('Message: %s', $message);
         }
 
         if ($code = $error->getCode()) {
-            $text .= PHP_EOL . sprintf('    code: %s', $code);
+            $text .= PHP_EOL . sprintf('Code: %s', $code);
         }
 
         if ($file = $error->getFile()) {
-            $text .= PHP_EOL . sprintf('    file: %s', $file);
+            $text .= PHP_EOL . sprintf('File: %s', $file);
         }
 
         if ($line = $error->getLine()) {
-            $text .= PHP_EOL . sprintf('    line: %s', $line);
+            $text .= PHP_EOL . sprintf('Line: %s', $line);
         }
 
         if ($trace = $error->getTraceAsString()) {
-            $text .= PHP_EOL . sprintf('    trace: %s', $trace);
+            $text .= PHP_EOL . sprintf('Trace: %s' . PHP_EOL, $trace);
         }
 
         return $text;

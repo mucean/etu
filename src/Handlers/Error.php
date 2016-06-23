@@ -37,15 +37,16 @@ class Error extends AbstractError
 
     protected function renderHtmlError($error)
     {
-        $title = 'A error has occured<br>';
+        $title = 'An error occurred';
 
+        $body = sprintf('<h1>%s</h1>', $title);
         if ($this->showErrorDetails) {
-            $body = '<h2>Details</h2>';
+            $body .= '<h2>Details</h2>';
             $body .= $this->renderHtml($error);
 
             while ($previous = $error->getPrevious()) {
                 $body .= sprintf(
-                    '<div>Previous:</div>%s',
+                    '<h2>Previous:</h2>%s',
                     $previous
                 );
             }
@@ -60,26 +61,26 @@ class Error extends AbstractError
 
     protected function renderHtml($error)
     {
-        $text = sprintf('Error type: %s', get_class($error));
+        $text = sprintf('<div><b>Error type :</b> %s</div>', get_class($error));
 
         if ($message = $error->getMessage()) {
-            $text .= '<br>' . sprintf('message: %s', $message);
+            $text .= sprintf('<div><b>Message :</b> %s</div>', $message);
         }
 
         if ($code = $error->getCode()) {
-            $text .= '<br>' . sprintf('code: %s', $code);
+            $text .= sprintf('<div><b>Code :</b> %s</div>', $code);
         }
 
         if ($file = $error->getFile()) {
-            $text .= '<br>' . sprintf('file: %s', $file);
+            $text .= sprintf('<div><b>File :</b> %s</div>', $file);
         }
 
         if ($line = $error->getLine()) {
-            $text .= '<br>' . sprintf('line: %s', $line);
+            $text .= sprintf('<div><b>Line :</b> %s</div>', $line);
         }
 
         if ($trace = $error->getTraceAsString()) {
-            $text .= sprintf('<br>trace: <br><pre>%s</pre>', $trace);
+            $text .= sprintf('<div><b>Trace :</b> <br><pre>%s</pre></div>', $trace);
         }
 
         return $text;
@@ -87,7 +88,24 @@ class Error extends AbstractError
 
     protected function renderJsonError($error)
     {
-        return $error;
+        $text = ['Error' => 'An error occurred'];
+
+        if ($this->showErrorDetails) {
+            $text['details'] = [];
+
+            do {
+                $text['details'][] = [
+                    'type' => get_class($error),
+                    'message' => $error->getMessage(),
+                    'code' => $error->getCode(),
+                    'file' => $error->getFile(),
+                    'line' => $error->getLine(),
+                    'trace' => $error->getTraceAsString()
+                ];
+            } while ($error = $error->getPrevious());
+        }
+
+        return json_encode($text, JSON_PRETTY_PRINT);
     }
 
     protected function renderXmlError($error)

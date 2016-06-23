@@ -22,8 +22,8 @@ abstract class AbstractThrowable
         $acceptHeader = $request->getHeaderLine('Accept');
         $knownContentType = array_keys($this->knownContentType);
         $acceptedContentType = array_intersect(
-            $knownContentType,
-            explode(',', $acceptHeader)
+            explode(',', $acceptHeader),
+            $knownContentType
         );
 
         $contentType = 'text/html';

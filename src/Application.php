@@ -64,6 +64,20 @@ class Application
 
     public function response(ResponseInterface $response)
     {
+        if (!headers_sent()) {
+            header(sprintf(
+                'HTTP/%s %s %s',
+                $response->getProtocolVersion(),
+                $response->getStatusCode(),
+                $response->getReasonPhrase()
+            ));
+
+            foreach ($response->getHeaders() as $key => $values) {
+                foreach ($values as $value) {
+                    header(sprintf('%s: %s', $key, $value), false);
+                }
+            }
+        }
         echo $response->getBody();
     }
 

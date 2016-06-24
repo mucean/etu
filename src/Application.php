@@ -8,6 +8,7 @@ use Etu\Traits\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Etu\Container;
+use InvalidArgumentException;
 
 class Application
 {

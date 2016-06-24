@@ -110,6 +110,23 @@ class Error extends AbstractError
 
     protected function renderXmlError($error)
     {
-        return $error;
+        $text = "<error>\n  <message>An error occurred</message>\n";
+
+        if ($this->showErrorDetails) {
+            do {
+                $text .= "  <details>\n";
+                $text .= "    <type>" . get_class($error) . "</type>\n";
+                $text .= "    <message>" . $error->getMessage() . "</message>\n";
+                $text .= "    <code>" . $error->getCode() . "</code>\n";
+                $text .= "    <file>" . $error->getFile() . "</file>\n";
+                $text .= "    <line>" . $error->getLine() . "</line>\n";
+                $text .= "    <trace>" . $error->getTraceAsString() . "</trace>\n";
+                $text .= "  </details>\n";
+            } while ($error = $error->getPrevious());
+        }
+
+        $text .= "</error>";
+
+        return $text;
     }
 }

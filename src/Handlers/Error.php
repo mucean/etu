@@ -4,13 +4,14 @@ namespace Etu\Handlers;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Etu\Stream;
+use Throwable;
 
 class Error extends AbstractError
 {
     public function __invoke(
-        \Throwable $error,
         ServerRequestInterface $request,
-        ResponseInterface $response
+        ResponseInterface $response,
+        Throwable $error
     ) {
         $contentType = $this->responseContentType($request);
 

@@ -1,9 +1,16 @@
 <?php
 namespace Etu\Http;
 
-class Context implements \ArrayAccess, \Countable
+use Etu\ArrayAccess;
+
+// class Context implements \ArrayAccess, \Countable
+class Context extends ArrayAccess
 {
-    protected $context = [];
+    public static function buildFromServer()
+    {
+        return new static($_SERVER);
+    }
+    /* protected $context = [];
 
     public function __construct(array $context)
     {
@@ -27,14 +34,15 @@ class Context implements \ArrayAccess, \Countable
     public function set($key, $value)
     {
         $this->context[$key] = $value;
-    }
+    } */
 
     public function keys()
     {
-        return array_keys($this->context);
+        // return array_keys($this->context);
+        return array_keys($this->value);
     }
 
-    public function has($key)
+    /* public function has($key)
     {
         return isset($this->context[$key]);
     }
@@ -42,14 +50,14 @@ class Context implements \ArrayAccess, \Countable
     public function remove($key)
     {
         unset($this->context[$key]);
-    }
+    } */
 
     public function merge(array $data)
     {
-        $this->context = array_merge($this->context, $data);
+        $this->value = array_merge($this->value, $data);
     }
 
-    public function offsetExists($offset)
+    /* public function offsetExists($offset)
     {
         return $this->has($offset);
     }
@@ -72,5 +80,5 @@ class Context implements \ArrayAccess, \Countable
     public function count()
     {
         return count($this->context);
-    }
+    } */
 }

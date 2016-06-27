@@ -6,6 +6,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Etu\Traits\Middleware;
 use Etu\Container;
+use Etu\Exception\NotFoundException;
 use RuntimeException;
 use Closure;
 
@@ -72,7 +73,7 @@ class Router
 
         $mapClass = $this->mapClass($this->basePath . $realPath);
         if (!class_exists($mapClass) || !is_callable([$mapClass, $requestMethod])) {
-            throw new RuntimeException('Request can not be processed', 404);
+            throw new NotFoundException('Request can not be processed', 404);
         }
 
         $controller = new $mapClass();

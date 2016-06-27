@@ -23,7 +23,7 @@ abstract class Message implements MessageInterface
     public function withProtocolVersion($version)
     {
         $new = clone $this;
-        $this->validateProtocol($version);
+        $new->validateProtocol($version);
         $new->protocol = $version;
 
         return $new;

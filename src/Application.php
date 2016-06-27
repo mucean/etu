@@ -8,18 +8,14 @@ use Etu\Traits\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Etu\Container;
+use Etu\Exception\NotFoundException;
 use InvalidArgumentException;
+use Closure;
+use Exception;
 
 class Application
 {
     use Middleware;
-
-    /**
-     * handle exception if $this->start()
-     *
-     * @var callable
-     */
-    protected $exceptionHandler = null;
 
     protected $container;
 
@@ -41,22 +37,28 @@ class Application
      *
      * @return ResponseInterface
      */
-    public function run()
+    public function run($silent = false)
     {
         $request = $this->container->get('request');
         $response = $this->container->get('response');
 
         $response = $this->process($request, $response);
 
-        $this->response($response);
+        if (!$silent) {
+            $this->response($response);
+        }
+
+        return $response;
     }
 
     public function process(ServerRequestInterface $request, ResponseInterface $response)
     {
         try {
             $this->executeMiddleware($request, $response);
-        } catch (\Throwable $error) {
-            $response = $this->handlerError($error, $request, $response);
+        } catch (Exception $e) {
+            $response = $this->handleException($e, $request, $response);
+        } catch (Throwable $error) {
+            $response = $this->handleError($error, $request, $response);
         }
 
         return $response;
@@ -83,7 +85,7 @@ class Application
 
     public function add(callable $middleware)
     {
-        if ($middleware instanceof \Closure) {
+        if ($middleware instanceof Closure) {
             $middleware = $middleware->bindTo($this);
         }
 
@@ -91,25 +93,27 @@ class Application
         return $this;
     }
 
-    /**
-     * setExceptionHandler
-     * @return null
-     * @author mucean
-     **/
-    public function setExceptionHandler(callable $handler)
+    public function handleException(Exception $excep, ServerRequestInterface $request, Response $response)
     {
-        if ($handler instanceof \Closure) {
-            $handler = $handler->bindTo($this);
+        $handler = '';
+        if ($excep instanceof NotFoundException) {
+            $handler = 'notFoundHandler';
         }
 
-        $this->exceptionHandler = $handler;
+        if ($handler === '') {
+            $handler = 'userDefinedHandler';
+        }
+
+        if (!$this->container->has($handler)) {
+            throw $excep;
+        }
+
+        $parameters = [$request, $response, $excep];
+
+        return call_user_func_array($this->container->get($handler), $parameters);
     }
 
-    // public function handleException(\Exception $excep, ServerRequestInterface $request, Response $response)
-    // {
-    // }
-
-    public function handlerError(\Throwable $error, ServerRequestInterface $request, ResponseInterface $response)
+    public function handleError(Throwable $error, ServerRequestInterface $request, ResponseInterface $response)
     {
         $handler = 'errorHandler';
 
@@ -117,7 +121,7 @@ class Application
             throw $error;
         }
 
-        $parameters = [$error, $request, $response];
+        $parameters = [$request, $response, $error];
 
         return call_user_func_array($this->container->get($handler), $parameters);
     }
@@ -144,7 +148,7 @@ class Application
 
         if (TEST) {
             if (!is_dir($dir)) {
-                throw new \Exception(
+                throw new Exception(
                     sprintf('invalid directory was given: %s', $dir)
                 );
             }

@@ -3,6 +3,7 @@ namespace Tests\Http;
 
 use Etu\Http\Context;
 use Etu\Http\Message;
+use Etu\Http\Headers;
 use Etu\Stream;
 
 class MessageMock extends Message
@@ -17,7 +18,6 @@ class MessageMock extends Message
         stream_copy_to_stream(fopen('php://input', 'r'), $bodyStream);
         $this->body = new Stream($bodyStream);
 
-        $headers = $context->all();
-        $this->setHeaders(getallheaders($headers));
+        $this->headers = Headers::buildFromContext($context);
     }
 }

@@ -9,11 +9,12 @@ abstract class Message implements MessageInterface
 {
     protected $protocol = '1.1';
 
-    protected $headers = [];
+    // protected $headers = [];
+    protected $headers;
 
     protected $body;
 
-    protected $headerLines = [];
+    // protected $headerLines = [];
 
     public function getProtocolVersion()
     {
@@ -31,19 +32,22 @@ abstract class Message implements MessageInterface
 
     public function getHeaders()
     {
-        return $this->headerLines;
+        // return $this->headerLines;
+        return $this->headers->all();
     }
 
     public function hasHeader($name)
     {
-        return isset($this->headers[strtolower($name)]);
+        // return isset($this->headers[strtolower($name)]);
+        return $this->headers->has($name);
     }
 
     public function getHeader($name)
     {
-        return $this->hasHeader($name) ?
+        /* return $this->hasHeader($name) ?
         $this->headers[strtolower($name)] :
-        [];
+        []; */
+        return $this->headers->get($name);
     }
 
     public function getHeaderLine($name)
@@ -53,7 +57,7 @@ abstract class Message implements MessageInterface
 
     public function withHeader($name, $value)
     {
-        if (!is_string($name) && !method_exists($name, '__toString')) {
+        /* if (!is_string($name) && !method_exists($name, '__toString')) {
             throw new InvalidArgumentException(
                 'header name must be a string or has __toString function when use withHeader function set a header'
             );
@@ -67,12 +71,39 @@ abstract class Message implements MessageInterface
 
         $new->syncHeaderLines($name);
 
+        return $new; */
+        $new = clone $this;
+
+        $new->headers->set($name, $value);
+
         return $new;
     }
 
     public function withAddedHeader($name, $value)
     {
-        if (!is_string($name) && !method_exists($name, '__toString')) {
+        $new = clone $this;
+
+        $header = $new->getHeader($name);
+        if ([] !== $header) {
+            if (is_array($value)) {
+                foreach ($value as $eachValue) {
+                    if (!in_array($eachValue, $header)) {
+                        $header[] = trim((string) $eachValue);
+                    }
+                }
+            } else {
+                if (!in_array($value, $header)) {
+                    $header[] = trim((string) $value);
+                }
+            }
+        } else {
+            $header = $value;
+        }
+
+        $new->headers->set($name, $header);
+
+        return $new;
+        /* if (!is_string($name) && !method_exists($name, '__toString')) {
             throw new InvalidArgumentException(
                 'header name must be a string or has __toString function when use withAddedHeader function'
             );
@@ -103,14 +134,19 @@ abstract class Message implements MessageInterface
 
         $new->syncHeaderLines($name);
 
-        return $new;
+        return $new; */
     }
 
     public function withoutHeader($name)
     {
-        $new = clone $this;
+        /* $new = clone $this;
         unset($new->headers[strtolower($name)]);
         $new->syncHeaderLines($name);
+
+        return $new; */
+        $new = clone $this;
+
+        $new->headers->unset($name);
 
         return $new;
     }
@@ -140,7 +176,7 @@ abstract class Message implements MessageInterface
         }
     }
 
-    protected function normalizeHeaderValue($value)
+    /* protected function normalizeHeaderValue($value)
     {
         if (is_array($value)) {
             foreach ($value as &$eachValue) {
@@ -161,9 +197,9 @@ abstract class Message implements MessageInterface
                 'header value must be an type can be convert to string or an array contains string value'
             );
         }
-    }
+    } */
 
-    protected function syncHeaderLines($name)
+    /* protected function syncHeaderLines($name)
     {
         $headerName = strtolower($name);
         $isNew = true;
@@ -183,9 +219,9 @@ abstract class Message implements MessageInterface
 
             $this->headerLines[$key] = $this->headers[$headerName];
         }
-    }
+    } */
 
-    protected function setHeaders(array $headers)
+    /* protected function setHeaders(array $headers)
     {
         $this->headerLines = $this->headers = [];
 
@@ -205,5 +241,5 @@ abstract class Message implements MessageInterface
                 }
             }
         }
-    }
+    } */
 }

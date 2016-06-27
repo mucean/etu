@@ -6,58 +6,56 @@ use Etu\Http\Uri;
 
 class RequestTest extends \PHPUnit_Framework_TestCase
 {
+    protected $request;
+
+    protected $context;
+
+    /**
+     * @before
+     */
+    public function buildRequest()
+    {
+        $this->context = BuildContext::getContext();
+        $this->request = Request::buildFromContext($this->context);
+    }
+
     public function testBuildFromContext()
     {
-        $context = BuildContext::getContext();
-        $request = Request::buildFromContext($context);
-        $this->assertInstanceOf('Etu\Http\Request', $request);
-
-        return $request;
+        $this->assertInstanceOf('Etu\Http\Request', $this->request);
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testGetServerParams(Request $request)
+    public function testGetServerParams()
     {
         $originalServer = BuildContext::$context;
-        $this->assertEquals($originalServer, $request->getServerParams());
+        $this->assertEquals($originalServer, $this->request->getServerParams());
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testGetCookieParams(Request $request)
+    public function testGetCookieParams()
     {
+        $request = $this->request;
         $this->assertEquals($_COOKIE, $request->getCookieParams());
         $this->assertEquals([], $request->getCookieParams());
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testWithCookieParams(Request $request)
+    public function testWithCookieParams()
     {
+        $request = $this->request;
         $newCookie = ['hi' => 'hello, world!'];
         $newRequest = $request->withCookieParams($newCookie);
         $this->assertNotSame($newRequest, $request);
         $this->assertEquals($newCookie, $newRequest->getCookieParams());
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testGetQueryParams(Request $request)
+    public function testGetQueryParams()
     {
+        $request = $this->request;
         $_GET = ['aa' => 'bb', 'cc' => ['dd', 'ee']];
         $this->assertEquals($_GET, $request->getQueryParams());
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testWithQueryParams(Request $request)
+    public function testWithQueryParams()
     {
+        $request = $this->request;
         $testQueryParams = ['hi' => 'Hello, world!'];
         $newRequest = $request->withQueryParams($testQueryParams);
         $this->assertNotSame($request, $newRequest);
@@ -89,11 +87,9 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($request->getParsedBody(), $expect);
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testWithParsedBody(Request $request)
+    public function testWithParsedBody()
     {
+        $request = $this->request;
         $newRequest = $request->withParsedBody(null);
         $this->assertEquals($newRequest->getParsedBody(), null);
         $newRequest = $request->withParsedBody(['hi' => 'hello, world!']);
@@ -107,38 +103,28 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $request->withParsedBody('error');
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testGetAttributes(Request $request)
+    public function testGetAttributes()
     {
-        $this->assertEquals($request->getAttributes(), []);
+        $this->assertEquals($this->request->getAttributes(), []);
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testGetAttribute(Request $request)
+    public function testGetAttribute()
     {
-        $this->assertEquals($request->getAttribute('hi', 'Hello, world!'), 'Hello, world!');
+        $this->assertEquals($this->request->getAttribute('hi', 'Hello, world!'), 'Hello, world!');
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testWithAttribute(Request $request)
+    public function testWithAttribute()
     {
+        $request = $this->request;
         $value = 'Hello, world!';
         $this->assertEquals($request->getAttribute('hi', $value), $value);
         $newRequest = $request->withAttribute('hi', $value);
         $this->assertEquals($newRequest->getAttribute('hi'), $value);
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testWithoutAttribute(Request $request)
+    public function testWithoutAttribute()
     {
+        $request = $this->request;
         $value = 'Hello, world!';
         $newRequest = $request->withAttribute('hi', $value);
         $this->assertEquals($newRequest->getAttribute('hi'), $value);
@@ -146,35 +132,27 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($otherNewRequest->getAttribute('hi'), null);
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testGetRequestTarget(Request $request)
+    public function testGetRequestTarget()
     {
+        $request = $this->request;
         $this->assertEquals(
             $request->get('servers', ['REQUEST_URI']),
             rawurldecode($request->getRequestTarget())
         );
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testWithRequestTarget(Request $request)
+    public function testWithRequestTarget()
     {
-        $newRequest = $request->withRequestTarget('/hello/world');
+        $newRequest = $this->request->withRequestTarget('/hello/world');
         $this->assertEquals(
             rawurldecode($newRequest->getRequestTarget()),
             '/hello/world'
         );
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testGetMethod(Request $request)
+    public function testGetMethod()
     {
-        $this->assertEquals('PUT', $request->getMethod());
+        $this->assertEquals('PUT', $this->request->getMethod());
         $otherRequest = Request::buildFromContext(BuildContext::getContext([
             'REQUEST_METHOD' => 'GET',
             'HTTP_X_Http_Method_Override' => 'POST',
@@ -182,39 +160,28 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('POST', $otherRequest->getMethod());
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testWithMethod(Request $request)
+    public function testWithMethod()
     {
-        $newRequest = $request->withMethod('DELETE');
+        $newRequest = $this->request->withMethod('DELETE');
         $this->assertEquals($newRequest->getMethod(), 'DELETE');
         $this->setExpectedException('InvalidArgumentException', 'request method must be a string');
-        $request->withMethod([]);
+        $this->request->withMethod([]);
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testWithMethodException(Request $request)
+    public function testWithMethodException()
     {
         $this->setExpectedException('InvalidArgumentException', 'Request method must be a valid method');
-        $request->withMethod('hello');
+        $this->request->withMethod('hello');
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testGetUri(Request $request)
+    public function testGetUri()
     {
-        $this->assertInstanceOf('Etu\Http\Uri', $request->getUri());
+        $this->assertInstanceOf('Etu\Http\Uri', $this->request->getUri());
     }
 
-    /**
-     * @depends testBuildFromContext
-     */
-    public function testWithUri(Request $request)
+    public function testWithUri()
     {
+        $request = $this->request;
         $newRequest = $request->withUri(Uri::buildFromUrl('http://www.mucean.com:90/abc/def?aa=bb#heihei'));
         $this->assertEquals($newRequest->getHeaderLine('host'), 'www.mucean.com:90');
         $newRequest = $request->withUri(Uri::buildFromUrl('http://www.mucean.com:90/abc/def?aa=bb#heihei'), true);

@@ -5,27 +5,28 @@ use Etu\Stream;
 
 class MessageTest extends \PHPUnit_Framework_TestCase
 {
-    public function testConstruct()
-    {
-        $message = new MessageMock(BuildContext::getContext());
-        $this->assertInstanceOf('Tests\Http\MessageMock', $message);
+    protected $context;
 
-        return $message;
-    }
+    protected $message;
 
     /**
-     * @depends testConstruct
+     * @before
      */
-    public function testGetProtocolVersion(MessageMock $message)
+    public function buildMessage()
     {
+        $this->context = BuildContext::getContext();
+        $this->message = new MessageMock($this->context);
+    }
+
+    public function testGetProtocolVersion()
+    {
+        $message = $this->message;
         $this->assertEquals($message->getProtocolVersion(), '1.1');
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testWithProtocolVersion(MessageMock $message)
+    public function testWithProtocolVersion()
     {
+        $message = $this->message;
         $protocol = '2.0';
         $newMessage = $message->withProtocolVersion($protocol);
         $this->assertEquals($newMessage->getProtocolVersion(), $protocol);
@@ -37,72 +38,50 @@ class MessageTest extends \PHPUnit_Framework_TestCase
         $message->withProtocolVersion($wrongProtocol);
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testGetHeaders(MessageMock $message)
+    public function testGetHeaders()
     {
-        $this->assertEquals(array_keys($message->getHeaders()), array_keys(getallheaders(BuildContext::$context)));
+        $message = $this->message;
+        $data = [];
+        foreach (BuildContext::$context as $name => $value) {
+            if (strpos($name, 'HTTP_') === 0) {
+                $data[$name] = [$value];
+            }
+        }
+
+        $this->assertEquals($data, $message->getHeaders());
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testHasHeader(MessageMock $message)
+    public function testHasHeader()
     {
+        $message = $this->message;
         $this->assertTrue($message->hasHeader('host'));
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testGetHeader(MessageMock $message)
+    public function testGetHeader()
     {
-        $this->assertEquals($message->getHeader('host')[0], getallheaders(BuildContext::$context)['Host']);
+        $message = $this->message;
+        $this->assertEquals($message->getHeader('host')[0], $this->context->get('HTTP_HOST'));
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testGetHeaderLine(MessageMock $message)
+    public function testGetHeaderLine()
     {
-        $this->assertEquals($message->getHeaderLine('host'), getallheaders(BuildContext::$context)['Host']);
+        $message = $this->message;
+        $this->assertEquals($message->getHeaderLine('host'), $this->context->get('HTTP_HOST'));
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testWithHeader(MessageMock $message)
+    public function testWithHeader()
     {
+        $message = $this->message;
         $this->assertEquals($message->getHeaderLine('hi'), '');
         $newMessage = $message->withHeader('hi', 'hello, world!');
         $this->assertEquals($newMessage->getHeaderLine('hi'), 'hello, world!');
         $newMessage = $message->withHeader('hi', ['hello', 'world']);
         $this->assertEquals($newMessage->getHeaderLine('hi'), 'hello,world');
-        $this->setExpectedException(
-            'InvalidArgumentException',
-            'header name must be a string or has __toString function when use withHeader function set a header'
-        );
-        $message->withHeader([], 'error');
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testWithHeaderNameException(MessageMock $message)
+    public function testWithHeaderValueException()
     {
-        $this->setExpectedException(
-            'InvalidArgumentException',
-            'header name must be a string or has __toString function when use withHeader function set a header'
-        );
-        $message->withHeader($this, 'error');
-    }
-
-    /**
-     * @depends testConstruct
-     */
-    public function testWithHeaderValueException(MessageMock $message)
-    {
+        $message = $this->message;
         $this->setExpectedException(
             'InvalidArgumentException',
             'header value must be an type can be convert to string or an array contains string value'
@@ -110,11 +89,9 @@ class MessageTest extends \PHPUnit_Framework_TestCase
         $message->withHeader('hi', $this);
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testWithHeaderOtherValueException(MessageMock $message)
+    public function testWithHeaderOtherValueException()
     {
+        $message = $this->message;
         $this->setExpectedException(
             'InvalidArgumentException',
             'header array value must only contains an type can be convert to string'
@@ -122,51 +99,42 @@ class MessageTest extends \PHPUnit_Framework_TestCase
         $message->withHeader('hi', ['hello', $this]);
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testWithAddedHeader(MessageMock $message)
+    public function testWithAddedHeader()
     {
-        $this->assertEquals($message->getHeaderLine('host'), getallheaders(BuildContext::$context)['Host']);
+        $message = $this->message;
+        $this->assertEquals($message->getHeaderLine('host'), $this->context->get('HTTP_HOST'));
         // with same host
-        $newMessage = $message->withAddedHeader('host', getallheaders(BuildContext::$context)['Host']);
-        $this->assertEquals($newMessage->getHeaderLine('host'), getallheaders(BuildContext::$context)['Host']);
+        $newMessage = $message->withAddedHeader('host', $this->context->get('HTTP_HOST'));
+        $this->assertEquals($newMessage->getHeaderLine('host'), $this->context->get('HTTP_HOST'));
         // with same host
-        $newMessage = $message->withAddedHeader('host', [getallheaders(BuildContext::$context)['Host']]);
-        $this->assertEquals($newMessage->getHeaderLine('host'), getallheaders(BuildContext::$context)['Host']);
+        $newMessage = $message->withAddedHeader('host', [$this->context->get('HTTP_HOST')]);
+        $this->assertEquals($newMessage->getHeaderLine('host'), $this->context->get('HTTP_HOST'));
         // with other host
         $newMessage = $message->withAddedHeader('host', 'www.mucean.com');
         $this->assertEquals(
             $newMessage->getHeaderLine('host'),
-            getallheaders(BuildContext::$context)['Host'] . ',' . 'www.mucean.com'
+            $this->context->get('HTTP_HOST') . ',' . 'www.mucean.com'
         );
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testWithoutHeader(MessageMock $message)
+    public function testWithoutHeader()
     {
-        $this->assertEquals($message->getHeaderLine('hi'), '');
+        $message = $this->message;
         $newMessage = $message->withHeader('hi', 'hello, world!');
         $this->assertEquals($newMessage->getHeaderLine('hi'), 'hello, world!');
         $newMessage = $newMessage->withoutHeader('hi');
         $this->assertEquals($newMessage->getHeaderLine('hi'), '');
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testGetBody(MessageMock $message)
+    public function testGetBody()
     {
+        $message = $this->message;
         $this->assertInstanceOf('Etu\Stream', $message->getBody());
     }
 
-    /**
-     * @depends testConstruct
-     */
-    public function testWithBody(MessageMock $message)
+    public function testWithBody()
     {
+        $message = $this->message;
         $stream = new Stream(fopen('php://input', 'r'));
         $newMessage = $message->withBody($stream);
         $this->assertInstanceOf('Tests\Http\MessageMock', $newMessage);

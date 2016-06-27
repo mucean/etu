@@ -18,7 +18,7 @@ class ArrayAccess implements Countable, ArrayAccess, IteratorAggregate
 
     protected $value = [];
 
-    public function __construct(array $value)
+    public function __construct(array $value = [])
     {
         $this->registerPropertyAccess('value', true);
 

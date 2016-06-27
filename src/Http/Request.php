@@ -1,17 +1,15 @@
 <?php
 namespace Etu\Http;
 
-use Closure;
-use Etu\Http\Context;
-use Etu\Http\Message;
-use Etu\Http\Uri;
 use Etu\Stream;
 use Etu\Traits\ArrayPropertyAllAccess;
-use InvalidArgumentException;
+use Etu\Interfaces\Http\HeadersInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
+use InvalidArgumentException;
 use RuntimeException;
+use Closure;
 
 class Request extends Message implements ServerRequestInterface
 {
@@ -39,9 +37,10 @@ class Request extends Message implements ServerRequestInterface
         stream_copy_to_stream(fopen('php://input', 'r'), $bodyStream);
         $bodyStream = new Stream($bodyStream);
         $uri = Uri::buildFromContext($context);
+        $headers = Headers::buildFromContext($context);
         $uploadedFiles = UploadedFile::buildFromContext();
 
-        return new static($context->all(), $_COOKIE, $bodyStream, $uri, $uploadedFiles);
+        return new static($context->all(), $_COOKIE, $bodyStream, $uri, $headers, $uploadedFiles);
     }
 
     public function __construct(
@@ -49,6 +48,7 @@ class Request extends Message implements ServerRequestInterface
         array $cookies,
         StreamInterface $body,
         UriInterface $uri,
+        HeadersInterface $headers,
         array $uploadedFiles = []
     ) {
         $this->servers = $servers;
@@ -59,7 +59,8 @@ class Request extends Message implements ServerRequestInterface
         $this->uri = $uri;
         $this->uploadedFiles = $uploadedFiles;
         $this->originalMethod = $this->get('servers', ['REQUEST_METHOD'], '');
-        $this->setHeaders(getallheaders($this->servers));
+        $this->headers = $headers;
+        // $this->setHeaders(getallheaders($this->servers));
 
         if (!$this->hasHeader('host') && isset($_SERVER['SERVER_NAME'])) {
             $this->withHeader('Host', $_SERVER['SERVER_NAME']);

@@ -35,6 +35,7 @@ class ArrayAccessTest extends \PHPUnit_Framework_TestCase
         $data = $this->test;
         $this->assertEquals($this->original['hi'], $data->get('hi'));
         $this->assertEquals($this->original['animal']['mammals'], $data->get(['animal', 'mammals']));
+        $this->assertEquals('null', $data->get('hello', 'null'));
     }
 
     public function testOffsetGet()

@@ -57,10 +57,10 @@ class ContextTest extends \PHPUnit_Framework_TestCase
     /**
      * @depends testConstruct
      */
-    public function testRemove(Context $context)
+    public function testUnset(Context $context)
     {
         $this->assertTrue($context->has('HTTP_CONNECTION'));
-        $context->remove('HTTP_CONNECTION');
+        $context->unset('HTTP_CONNECTION');
         $this->assertFalse($context->has('HTTP_CONNECTION'));
     }
 

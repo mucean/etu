@@ -10,7 +10,7 @@ interface HeadersInterface
 {
     public function all();
 
-    public function getAccessKey($key);
+    public function getHeaderName($key);
 
     public function get($key);
 

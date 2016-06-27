@@ -5,6 +5,7 @@ use Etu\Stream;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use Etu\Interfaces\Http\HeadersInterface;
 
 class Response extends Message implements ResponseInterface
 {
@@ -79,10 +80,15 @@ class Response extends Message implements ResponseInterface
         511 => 'Network Authentication Required',
     ];
 
-    public function __construct($statusCode = 200, array $headers = [], StreamInterface $body = null)
+    public function __construct($statusCode = 200, HeadersInterface $headers = null, StreamInterface $body = null)
     {
         $this->statusCode = $statusCode;
-        $this->setHeaders($headers);
+
+        if ($headers === null) {
+            $headers = new Headers();
+        }
+
+        $this->headers = $headers;
         $this->body = $body ? $body : new Stream(fopen('php://temp', 'w+'));
     }
 

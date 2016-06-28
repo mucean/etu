@@ -12,6 +12,7 @@ use Etu\Exception\NotFoundException;
 use InvalidArgumentException;
 use Closure;
 use Exception;
+use Throwable;
 
 class Application
 {

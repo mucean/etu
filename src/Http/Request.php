@@ -1,12 +1,12 @@
 <?php
 namespace Etu\Http;
 
-use Etu\Stream;
 use Etu\Traits\ArrayPropertyAllAccess;
 use Etu\Interfaces\Http\HeadersInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
+use Etu\Stream\RequestBody;
 use InvalidArgumentException;
 use RuntimeException;
 use Closure;
@@ -33,9 +33,7 @@ class Request extends Message implements ServerRequestInterface
 
     public static function buildFromContext(Context $context)
     {
-        $bodyStream = fopen('php://temp', 'w+');
-        stream_copy_to_stream(fopen('php://input', 'r'), $bodyStream);
-        $bodyStream = new Stream($bodyStream);
+        $bodyStream = new RequestBody();
         $uri = Uri::buildFromContext($context);
         $headers = Headers::buildFromContext($context);
         $uploadedFiles = UploadedFile::buildFromContext();
@@ -60,7 +58,6 @@ class Request extends Message implements ServerRequestInterface
         $this->uploadedFiles = $uploadedFiles;
         $this->originalMethod = $this->get('servers', ['REQUEST_METHOD'], '');
         $this->headers = $headers;
-        // $this->setHeaders(getallheaders($this->servers));
 
         if (!$this->hasHeader('host') && isset($_SERVER['SERVER_NAME'])) {
             $this->withHeader('Host', $_SERVER['SERVER_NAME']);

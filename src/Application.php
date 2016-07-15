@@ -1,13 +1,10 @@
 <?php
 namespace Etu;
 
-use Etu\Http\Context;
-use Etu\Http\Request;
 use Etu\Http\Response;
-use Etu\Traits\Middleware;
+use Etu\Traits\EtuMiddleware as Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Etu\Container;
 use Etu\Exception\NotFoundException;
 use InvalidArgumentException;
 use Closure;

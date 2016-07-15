@@ -1,7 +1,7 @@
 <?php
 namespace Tests\Traits;
 
-use Etu\Traits\Middleware;
+use Etu\Traits\EtuMiddleware as Middleware;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Etu\Container;

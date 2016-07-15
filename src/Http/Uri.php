@@ -1,7 +1,6 @@
 <?php
 namespace Etu\Http;
 
-use Etu\Http\Context;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 
@@ -30,7 +29,7 @@ class Uri implements UriInterface
     public static function buildFromUrl($url = null)
     {
         if (null === $url) {
-            return;
+            return null;
         }
 
         if (!is_string($url)) {
@@ -337,7 +336,7 @@ class Uri implements UriInterface
     protected function normalizePort($scheme, $host, $port)
     {
         if (null === $port) {
-            return;
+            return null;
         }
 
         $port = (int) $port;

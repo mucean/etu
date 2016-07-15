@@ -1,13 +1,9 @@
 <?php
 namespace Etu;
 
-use Etu\Http\Context;
-use Etu\Http\Request;
-use Etu\Http\Response;
-use Etu\Traits\Middleware;
+use Etu\Traits\EtuMiddleware as Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Etu\Container;
 use Etu\Exception\NotFoundException;
 use InvalidArgumentException;
 use Closure;
@@ -94,10 +90,10 @@ class Application
         return $this;
     }
 
-    public function handleException(Exception $excep, ServerRequestInterface $request, Response $response)
+    public function handleException(Exception $exp, ServerRequestInterface $request, ResponseInterface $response)
     {
         $handler = '';
-        if ($excep instanceof NotFoundException) {
+        if ($exp instanceof NotFoundException) {
             $handler = 'notFoundHandler';
         }
 
@@ -106,10 +102,10 @@ class Application
         }
 
         if (!$this->container->has($handler)) {
-            throw $excep;
+            throw $exp;
         }
 
-        $parameters = [$request, $response, $excep];
+        $parameters = [$request, $response, $exp];
 
         return call_user_func_array($this->container->get($handler), $parameters);
     }

@@ -1,8 +1,8 @@
 <?php
 namespace Tests\Traits;
 
-use Etu\Traits\Middleware;
-use Psr\Http\Message\RequestInterface;
+use Etu\Traits\EtuMiddleware as Middleware;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Etu\Container;
 
@@ -33,7 +33,7 @@ class MiddlewareTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('12345', (string) $response->getBody());
     }
 
-    public function __invoke(RequestInterface $request, ResponseInterface $response)
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response)
     {
         return $response->write('3');
     }

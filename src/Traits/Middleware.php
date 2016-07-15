@@ -2,9 +2,6 @@
 namespace Etu\Traits;
 
 use RuntimeException;
-use UnexpectedValueException;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * a middleware package
@@ -16,16 +13,16 @@ use Psr\Http\Message\ResponseInterface;
 trait Middleware
 {
     /**
-     * middlewares of wating to exec
+     * middleware of waiting to exec
      *
      * @var array
      */
-    protected $middlewares = [];
+    protected $middleware = [];
 
     protected $locked = false;
 
     /**
-     * add middleware wate to exec
+     * add middleware waite to exec
      *
      * @param  callable $middleware
      * @return null
@@ -36,33 +33,39 @@ trait Middleware
             throw new RuntimeException('can not add when middleware is execute');
         }
 
-        if ($this->middlewares === []) {
-            $this->prepareMiddlewares();
+        if ($this->middleware === []) {
+            $this->prepareMiddleware();
         }
 
-        $next = $this->middlewares[0];
+        $next = $this->middleware[0];
 
         array_unshift(
-            $this->middlewares,
-            function (RequestInterface $request, ResponseInterface $response) use ($middleware, $next) {
-                $result = call_user_func($middleware, $request, $response, $next);
-
-                if (!$result instanceof ResponseInterface) {
-                    throw new UnexpectedValueException(
-                        'value of middleware returned must instance of \Psr\Http\Message\ResponseInterface'
-                    );
-                }
-
-                return $result;
-            }
+            $this->middleware,
+            $this->getAddedMiddleware($middleware, $next)
         );
 
         return $this;
     }
 
-    protected function prepareMiddlewares(callable $kernel = null)
+    protected function getAddedMiddleware(callable $middleware, callable $next)
     {
-        if ($this->middlewares !== []) {
+        return function () use ($middleware, $next) {
+            $params = func_get_args();
+
+            call_user_func_array([$this, 'paramsValidate'], $params);
+
+            $params = array_merge($params, [$next]);
+            $result = call_user_func_array($middleware, $params);
+
+            call_user_func([$this, 'returnValidate'], $result);
+
+            return $result;
+        };
+    }
+
+    protected function prepareMiddleware(callable $kernel = null)
+    {
+        if ($this->middleware !== []) {
             throw new RuntimeException('prepare middleware can only be called once');
         }
 
@@ -70,34 +73,46 @@ trait Middleware
             $kernel = $this;
         }
 
-        $this->middlewares[] = $kernel;
+        $this->middleware[] = $kernel;
     }
 
     /**
-     * execute added middleware sequently
+     * execute added middleware sequent
      *
      * @return null
      */
-    public function executeMiddleware(RequestInterface $request, ResponseInterface $response)
+    public function executeMiddleware()
     {
-        if ($this->middlewares === []) {
-            $this->prepareMiddlewares();
+        if ($this->middleware === []) {
+            $this->prepareMiddleware();
         }
 
         $this->locked = true;
-        $result = $this->middlewares[0]($request, $response);
+        $params = func_get_args();
+        call_user_func_array([$this, 'paramsValidate'], $params);
+        $result = call_user_func_array($this->middleware[0], $params);
         $this->locked = false;
 
         return $result;
     }
 
+    protected function paramsValidate()
+    {
+        return true;
+    }
+
+    protected function returnValidate($returnValue)
+    {
+        return true;
+    }
+
     /**
-     * reset middlewares
+     * reset middleware
      *
      * @return null
      */
     protected function resetMiddleware()
     {
-        $this->middlewares = [];
+        $this->middleware = [];
     }
 }

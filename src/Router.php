@@ -4,10 +4,8 @@ namespace Etu;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Etu\Traits\Middleware;
-use Etu\Container;
+use Etu\Traits\EtuMiddleware as Middleware;
 use Etu\Exception\NotFoundException;
-use RuntimeException;
 use Closure;
 
 class Router

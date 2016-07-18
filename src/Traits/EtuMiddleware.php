@@ -1,5 +1,4 @@
 <?php
-
 namespace Etu\Traits;
 
 use InvalidArgumentException;
@@ -18,21 +17,31 @@ trait EtuMiddleware
     {
         $params = func_get_args();
 
-        if (!($params[0] instanceof ServerRequestInterface)) {
-            throw new InvalidArgumentException('Etu middleware first param must instanceof ServerRequestInterface');
+        if (count($params) < 2) {
+            throw new InvalidArgumentException('arguments passed to EtuMiddle must more than two');
         }
 
-        if (!($params[1] instanceof ResponseInterface)) {
-            throw new InvalidArgumentException('Etu middleware second param must instanceof ResponseInterface');
+        if (!$params[0] instanceof ServerRequestInterface) {
+            throw new InvalidArgumentException(
+                'first argument passed to EtuMiddle must instanceof Psr\Http\Message\ServerRequestInterface'
+            );
+        }
+
+        if (!$params[1] instanceof ResponseInterface) {
+            throw new InvalidArgumentException(
+                'second argument passed to EtuMiddle must instanceof Psr\Http\Message\ResponseInterface'
+            );
         }
 
         return true;
     }
 
-    protected function returnValidate($returnValue)
+    protected function returnValidate($return)
     {
-        if (!($returnValue instanceof ResponseInterface)) {
-            throw new UnexpectedValueException('Etu middleware return value must instanceof ResponseInterface');
+        if (!$return instanceof ResponseInterface) {
+            throw new UnexpectedValueException(
+                'value of middleware returned must instance of \Psr\Http\Message\ResponseInterface'
+            );
         }
 
         return true;

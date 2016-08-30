@@ -3,11 +3,10 @@ namespace Etu;
 
 use Etu\Traits\ArrayPropertyAllAccess;
 use Countable;
-use ArrayAccess;
 use IteratorAggregate;
 use ArrayIterator;
 
-class ArrayAccess implements Countable, ArrayAccess, IteratorAggregate
+class ArrayAccess implements Countable, \ArrayAccess, IteratorAggregate
 {
     use ArrayPropertyAllAccess {
         ArrayPropertyAllAccess::get as protected getProperty;

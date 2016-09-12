@@ -1,3 +1,3 @@
 # etu
-A PHP framework that easy to use
-## This is my first little framework
+A PHP RESTful framework that easy to use
+## This is my little PHP RESTful framework

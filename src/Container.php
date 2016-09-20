@@ -8,7 +8,6 @@ use Etu\Http\Request;
 use Etu\Http\Response;
 use Etu\Handlers\Error;
 use Etu\Handlers\NotFound;
-use Etu\Router;
 use Closure;
 use InvalidArgumentException;
 
@@ -179,6 +178,7 @@ class Container
 
         if (!$this->has('notFoundHandler')) {
             $this->add('notFoundHandler', function () {
+                $setting = $this->get('setting');
                 return new NotFound($setting->get('showErrorDetails', false));
             }, false);
         }

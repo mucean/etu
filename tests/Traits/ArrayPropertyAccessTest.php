@@ -1,9 +1,11 @@
 <?php
 namespace tests\Traits;
 
+use Etu\Traits\ArrayPropertyAllAccess;
+
 class ArrayPropertyAccessTest extends \PHPUnit_Framework_TestCase
 {
-    use \Etu\Traits\ArrayPropertyAllAccess;
+    use ArrayPropertyAllAccess;
 
     protected $readArray = ['abc' => ['acb' => ['aaa', 'bbb'], 'dfg' => 'cdd']];
     protected $writeArray = ['abc' => ['acb' => ['aaa', 'bbb'], 'dfg' => 'cdd']];
@@ -31,42 +33,42 @@ class ArrayPropertyAccessTest extends \PHPUnit_Framework_TestCase
 
     public function testGet()
     {
-        $this->assertEquals($this->get('readArray', []), $this->readArray);
-        $this->assertEquals($this->get('readArray', ['abc', 'dfg']), 'cdd');
-        $this->assertEquals($this->get('readArray', ['abc', 'acb']), ['aaa', 'bbb']);
-        $this->assertEquals($this->get('readArray', ['abc', 'acb', 1]), 'bbb');
-        $this->assertEquals($this->get('readArray', ['abc', 'acb', 2]), null);
-        $this->assertEquals($this->get('readArray', ['abc', 'acb', 2], 'hi'), 'hi');
-        $this->assertEquals($this->get('abc', ['abc', 'acb', 2]), null);
-        $this->assertEquals($this->get('readArray', []), $this->writeArray);
+        $this->assertEquals($this->getProperty('readArray', []), $this->readArray);
+        $this->assertEquals($this->getProperty('readArray', ['abc', 'dfg']), 'cdd');
+        $this->assertEquals($this->getProperty('readArray', ['abc', 'acb']), ['aaa', 'bbb']);
+        $this->assertEquals($this->getProperty('readArray', ['abc', 'acb', 1]), 'bbb');
+        $this->assertEquals($this->getProperty('readArray', ['abc', 'acb', 2]), null);
+        $this->assertEquals($this->getProperty('readArray', ['abc', 'acb', 2], 'hi'), 'hi');
+        $this->assertEquals($this->getProperty('abc', ['abc', 'acb', 2]), null);
+        $this->assertEquals($this->getProperty('readArray', []), $this->writeArray);
     }
 
     public function testHas()
     {
-        $this->assertTrue($this->has('readArray', []));
-        $this->assertTrue($this->has('readArray', ['abc', 'dfg']));
-        $this->assertTrue($this->has('readArray', ['abc', 'acb', 1]));
-        $this->assertFalse($this->has('readArray', ['abc', 'acb', 2]));
+        $this->assertTrue($this->hasProperty('readArray', []));
+        $this->assertTrue($this->hasProperty('readArray', ['abc', 'dfg']));
+        $this->assertTrue($this->hasProperty('readArray', ['abc', 'acb', 1]));
+        $this->assertFalse($this->hasProperty('readArray', ['abc', 'acb', 2]));
     }
 
     public function testSet()
     {
         $accessPath = ['aaa', 'ccc'];
-        $this->set('writeArray', $accessPath, 'bbb');
-        $this->assertEquals($this->get('writeArray', $accessPath), 'bbb');
-        $this->set('writeArray', $accessPath, 'ddd');
-        $this->assertEquals($this->get('writeArray', $accessPath), 'ddd');
+        $this->setProperty('writeArray', $accessPath, 'bbb');
+        $this->assertEquals($this->getProperty('writeArray', $accessPath), 'bbb');
+        $this->setProperty('writeArray', $accessPath, 'ddd');
+        $this->assertEquals($this->getProperty('writeArray', $accessPath), 'ddd');
         $this->setExpectedException('InvalidArgumentException', 'hello is not register to access');
-        $this->set('hello', ['aaa'], 'abc');
+        $this->setProperty('hello', ['aaa'], 'abc');
     }
 
     public function testUnset()
     {
         $writeArray = $this->writeArray;
-        $this->unset('writeArray', ['abc', 'dfg']);
+        $this->unsetProperty('writeArray', ['abc', 'dfg']);
         unset($writeArray['abc']['dfg']);
-        $this->assertEquals($this->get('writeArray', []), $writeArray);
+        $this->assertEquals($this->getProperty('writeArray', []), $writeArray);
         $this->setExpectedException('RuntimeException', 'readArray property is not allow to modify');
-        $this->unset('readArray', ['aaa'], 'abc');
+        $this->unsetProperty('readArray', ['aaa'], 'abc');
     }
 }

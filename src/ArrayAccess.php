@@ -8,12 +8,7 @@ use ArrayIterator;
 
 class ArrayAccess implements Countable, \ArrayAccess, IteratorAggregate
 {
-    use ArrayPropertyAllAccess {
-        ArrayPropertyAllAccess::get as protected getProperty;
-        ArrayPropertyAllAccess::has as protected hasProperty;
-        ArrayPropertyAllAccess::set as protected setProperty;
-        ArrayPropertyAllAccess::unset as protected unsetProperty;
-    }
+    use ArrayPropertyAllAccess;
 
     protected $values = [];
 

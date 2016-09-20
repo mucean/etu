@@ -13,7 +13,9 @@ use Closure;
 
 class Request extends Message implements ServerRequestInterface
 {
-    use ArrayPropertyAllAccess;
+    use ArrayPropertyAllAccess {
+        ArrayPropertyAllAccess::getProperty as public get;
+    }
 
     protected $servers;
     protected $cookies;

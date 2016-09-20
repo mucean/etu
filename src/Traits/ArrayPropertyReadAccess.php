@@ -8,7 +8,7 @@ trait ArrayPropertyReadAccess
 {
     protected $accessProperties = [];
 
-    public function &get($propertyName, $accessPath = [], $default = null)
+    protected function &getProperty($propertyName, $accessPath = [], $default = null)
     {
         $accessPath = $this->getAccessKey($accessPath);
         if ($this->permissionValidate($propertyName) !== 0) {
@@ -28,7 +28,7 @@ trait ArrayPropertyReadAccess
         return $data;
     }
 
-    public function has($propertyName, $accessPath)
+    protected function hasProperty($propertyName, $accessPath)
     {
         $accessPath = $this->getAccessKey($accessPath);
         if ($this->permissionValidate($propertyName) !== 0) {

@@ -14,12 +14,7 @@ use InvalidArgumentException;
 
 class Container
 {
-    use Singleton, ArrayPropertyAllAccess {
-        ArrayPropertyAllAccess::get as protected getProperty;
-        ArrayPropertyAllAccess::has as protected hasProperty;
-        ArrayPropertyAllAccess::set as protected setProperty;
-        ArrayPropertyAllAccess::unset as protected unsetProperty;
-    }
+    use Singleton, ArrayPropertyAllAccess;
 
     protected $container = [];
 

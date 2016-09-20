@@ -7,8 +7,9 @@ trait ArrayPropertyAllAccess
 {
     use ArrayPropertyReadAccess;
 
-    public function set($propertyName, array $accessPath, $value)
+    public function set($propertyName, $accessPath, $value)
     {
+        $accessPath = $this->getAccessKey($accessPath);
         $this->permissionValidate($propertyName, ['isWriteOperate' => true, 'throwException' => true]);
 
         if ([] === $accessPath) {
@@ -30,8 +31,9 @@ trait ArrayPropertyAllAccess
         return $this;
     }
 
-    function unset($propertyName, array $accessPath)
+    function unset($propertyName, $accessPath)
     {
+        $accessPath = $this->getAccessKey($accessPath);
         $this->permissionValidate($propertyName, ['isWriteOperate' => true, 'throwException' => true]);
 
         if ([] === $accessPath) {

@@ -8,8 +8,9 @@ trait ArrayPropertyReadAccess
 {
     protected $accessProperties = [];
 
-    public function &get($propertyName, array $accessPath = [], $default = null)
+    public function &get($propertyName, $accessPath = [], $default = null)
     {
+        $accessPath = $this->getAccessKey($accessPath);
         if ($this->permissionValidate($propertyName) !== 0) {
             return $default;
         }
@@ -27,8 +28,9 @@ trait ArrayPropertyReadAccess
         return $data;
     }
 
-    public function has($propertyName, array $accessPath)
+    public function has($propertyName, $accessPath)
     {
+        $accessPath = $this->getAccessKey($accessPath);
         if ($this->permissionValidate($propertyName) !== 0) {
             return false;
         }
@@ -98,7 +100,7 @@ trait ArrayPropertyReadAccess
             $key = [(string) $key];
         } elseif (!is_array($key)) {
             throw new InvalidArgumentException(
-                'access key is invalid, vaild key is a type of string, array, object with __toString function'
+                'access key is invalid, valid key is a type of string, array, object with __toString function'
             );
         }
 

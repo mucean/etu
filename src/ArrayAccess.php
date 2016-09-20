@@ -15,40 +15,40 @@ class ArrayAccess implements Countable, \ArrayAccess, IteratorAggregate
         ArrayPropertyAllAccess::unset as protected unsetProperty;
     }
 
-    protected $value = [];
+    protected $values = [];
 
-    public function __construct(array $value = [])
+    public function __construct(array $values = [])
     {
-        $this->registerPropertyAccess('value', true);
+        $this->registerPropertyAccess('values', true);
 
-        foreach ($value as $key => $value) {
+        foreach ($values as $key => $value) {
             $this->set($key, $value);
         }
     }
 
     public function all()
     {
-        return $this->value;
+        return $this->values;
     }
 
     public function &get($key, $default = null)
     {
-        return $this->getProperty('value', $this->getAccessKey($key), $default);
+        return $this->getProperty('values', $key, $default);
     }
 
     public function has($key)
     {
-        return $this->hasProperty('value', $this->getAccessKey($key));
+        return $this->hasProperty('values', $key);
     }
 
     public function set($key, $value)
     {
-        return $this->setProperty('value', $this->getAccessKey($key), $value);
+        return $this->setProperty('values', $key, $value);
     }
 
     public function unset($key)
     {
-        return $this->unsetProperty('value', $this->getAccessKey($key));
+        return $this->unsetProperty('values', $key);
     }
 
     public function &offsetGet($key)
@@ -73,11 +73,11 @@ class ArrayAccess implements Countable, \ArrayAccess, IteratorAggregate
 
     public function count()
     {
-        return count($this->value);
+        return count($this->values);
     }
 
     public function getIterator()
     {
-        return new ArrayIterator($this->value);
+        return new ArrayIterator($this->values);
     }
 }

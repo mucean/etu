@@ -40,22 +40,70 @@ class Sql extends Service
     /**
      * update database
      *
+     * $set = [
+     *     'set' => 'aa = bb, cc= ?',
+     *     'values' => ['cc'];
+     * ];
      * @return int
      */
-    public function update($table, array $column, array $where)
+    public function update($table, array $set, array $where)
     {
+        $set = $this->formatParams($set, 'set');
+        $where = $this->formatParams($where, 'where');
+
+        $values = array_merge($set['values'], $where['values']);
+
+        $statement = $this->prepareUpdate($table, $set['set'], $where['where']);
+
+        return $this->execute($statement, $values)->rowCount();
     }
 
+    /**
+     * format params
+     *
+     * @return array
+     */
+    public function formatParams(array $params, $key)
+    {
+        if (!array_key_exists($key, $set)) {
+            throw new InvalidArgumentException(sprintf('key `%s` is not existed'));
+        }
+
+        if (!array_key_exists('values', $set)) {
+            throw new InvalidArgumentException('key `values` is not existed');
+        }
+
+        $prepareStr = '';
+        $values = $params['values'];
+        if (is_array($params[$key])) {
+            foreach ($params[$key] as $column => $value) {
+                if (!is_int($column)) {
+                    $values[] = $value;
+                } else {
+                    $column = $value;
+                }
+                $prepareStr .= sprintf(' %s = ?', $this->quoteIdentifier($column));
+            }
+        } else {
+            $prepareStr = $params['set'];
+        }
+
+        return [
+            $key => $prepareStr,
+            'values' => $values
+        ];
+    }
+    
     /**
      * prepare update sql
      *
      * @return PDOStatement
      */
-    public function prepareUpdate($table, array $column, array $where)
+    public function prepareUpdate($table, $set, $where)
     {
-        $set = '';
-        foreach ($column as $key => $value) {
-        }
+        $sql = sprintf('UPDATE %s SET %s', $set, $where);
+
+        return $this->connect()->prepare($sql);
     }
 
     /**

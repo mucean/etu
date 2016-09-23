@@ -2,7 +2,7 @@
 
 namespace Tests\Service;
 
-use Etu\Service\Sql;
+use Etu\Service\Sql\Sql;
 
 /**
  * Class SqlTest

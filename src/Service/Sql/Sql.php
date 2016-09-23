@@ -1,6 +1,6 @@
 <?php
 
-namespace Etu\Service;
+namespace Etu\Service\Sql;
 
 use Etu\Service;
 use InvalidArgumentException;
@@ -38,6 +38,14 @@ class Sql extends Service
     }
 
     /**
+     * @return PDO
+     */
+    public function getPDO()
+    {
+        return $this->connect();
+    }
+
+    /**
      * update database
      *
      * $set = [
@@ -52,7 +60,6 @@ class Sql extends Service
         $where = $this->formatParams($where, 'where');
 
         $values = array_merge($set['values'], $where['values']);
-
         $statement = $this->prepareUpdate($table, $set['set'], $where['where']);
 
         return $this->execute($statement, $values)->rowCount();
@@ -65,24 +72,19 @@ class Sql extends Service
      */
     public function formatParams(array $params, $key)
     {
-        if (!array_key_exists($key, $set)) {
+        if (!array_key_exists($key, $params)) {
             throw new InvalidArgumentException(sprintf('key `%s` is not existed'));
         }
 
-        if (!array_key_exists('values', $set)) {
+        if (!array_key_exists('values', $params)) {
             throw new InvalidArgumentException('key `values` is not existed');
         }
 
         $prepareStr = '';
         $values = $params['values'];
         if (is_array($params[$key])) {
-            foreach ($params[$key] as $column => $value) {
-                if (!is_int($column)) {
-                    $values[] = $value;
-                } else {
-                    $column = $value;
-                }
-                $prepareStr .= sprintf(' %s = ?', $this->quoteIdentifier($column));
+            foreach ($params[$key] as $value) {
+                $prepareStr .= implode(' ', $params[$key]);
             }
         } else {
             $prepareStr = $params['set'];
@@ -101,7 +103,11 @@ class Sql extends Service
      */
     public function prepareUpdate($table, $set, $where)
     {
-        $sql = sprintf('UPDATE %s SET %s', $set, $where);
+        if ($where !== '') {
+            $where = sprintf(' WHERE %s', $where);
+        }
+
+        $sql = sprintf('UPDATE %s SET %s%s', $table, $set, $where);
 
         return $this->connect()->prepare($sql);
     }

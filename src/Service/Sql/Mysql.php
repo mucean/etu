@@ -2,7 +2,6 @@
 
 namespace Etu\Service\Sql;
 
-use Etu\Service\Sql;
 use PDO;
 
 /**

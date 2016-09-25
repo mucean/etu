@@ -40,8 +40,16 @@ class Update
      */
     protected $values = [];
 
-    protected $scope = [
-    ];
+    /**
+     * is need to prepare sql
+     *
+     * @var bool
+     */
+    protected $needPrepare = true;
+
+    const RESET_SCOPE_ALL = 'all';
+    const RESET_SCOPE_SET = 'set';
+    const RESET_SCOPE_WHERE = 'where';
 
     public function __construct(Sql $service, $table)
     {
@@ -56,6 +64,10 @@ class Update
      */
     public function set($column, $values)
     {
+        if ($this->needPrepare === false) {
+            $this->needPrepare = true;
+        }
+
         $this->sets[] = (string) $column;
 
         if (!is_array($values)) {
@@ -99,7 +111,24 @@ class Update
      *
      * @return void
      */
-    public function reset($scope = null)
+    public function reset($scope = self::RESET_SCOPE_ALL)
     {
+        $this->needPrepare = true;
+        switch ($scope) {
+            case self::RESET_SCOPE_SET:
+                $this->sets = [];
+                $this->values = [];
+                break;
+            case self::RESET_SCOPE_WHERE:
+                $this->whereColumns = [];
+                $this->whereValues = [];
+                break;
+            default:
+                $this->whereColumns = [];
+                $this->whereValues = [];
+                $this->sets = [];
+                $this->values = [];
+                break;
+        }
     }
 }

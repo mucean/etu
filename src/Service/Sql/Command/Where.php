@@ -25,7 +25,7 @@ trait Where
     /**
      * columns that want to where
      *
-     * @return Update
+     * @return $this
      */
     public function where($column, $values)
     {
@@ -38,5 +38,30 @@ trait Where
         $this->whereValues = array_merge($this->whereValues, $values);
 
         return $this;
+    }
+
+    /**
+     * sql where in
+     *
+     * @return $this
+     */
+    public function whereIn($column, $values)
+    {
+        return $this;
+    }
+    
+
+    /**
+     * normalize where columns for PDO prepare
+     *
+     * @return string
+     */
+    protected function normalizeWhereColumns(array $columns)
+    {
+        if ($columns === []) {
+            return '';
+        }
+
+        return sprintf('(%s)', implode(') AND (', $columns));
     }
 }

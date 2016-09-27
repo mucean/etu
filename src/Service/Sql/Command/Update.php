@@ -47,6 +47,13 @@ class Update
      */
     protected $needPrepare = true;
 
+    /**
+     * PDO prepared statement
+     *
+     * @var \PDOStatement
+     */
+    protected $statement;
+
     const RESET_SCOPE_ALL = 'all';
     const RESET_SCOPE_SET = 'set';
     const RESET_SCOPE_WHERE = 'where';
@@ -84,26 +91,69 @@ class Update
      *
      * @return int
      */
-    public function update(array $values = null)
+    public function execute(array $values = null)
     {
-        if ($values === null) {
-            $values = $this->values;
-            $whereValues = $this->whereValues;
-        } else {
-            $whereValues = [];
+        if ($this->needPrepare === true) {
+            $this->prepare();
         }
 
-        $sets = [
-            'set' => $this->sets,
-            'values' => $values
-        ];
+        if ($values === null) {
+            $values = array_merge($this->values, $this->whereValues);
+        }
 
-        $where = [
-            'where' => $this->whereColumns,
-            'values' => $whereValues
-        ];
+        //return $this->service->update($this->table, $sets, $where);
+        if (!$this->statement->execute($values)) {
+            return false;
+        }
+        return $this->statement->rowCount();
+    }
 
-        return $this->service->update($this->table, $sets, $where);
+    /**
+     * prepare update sql
+     *
+     * @return PDOStatement
+     */
+    public function prepare($sets = null, $where = null, $table = null)
+    {
+        if ($table === null) {
+            $table = $this->table;
+        }
+
+        if ($sets === null) {
+            $sets = $this->sets;
+        }
+
+        if (is_array($sets)) {
+            $sets = implode(',', $sets);
+        }
+
+        if ($where === null) {
+            $where = $this->whereColumns;
+        }
+
+        if (is_array($where)) {
+            $where = $this->normalizeWhereColumns($where);
+        }
+
+        if ($where) {
+            $where = sprintf(' WHERE %s', $where);
+        }
+
+        $sql = sprintf('UPDATE %s SET %s%s', $table, $sets, (string) $where);
+
+        $this->statement = $this->service->connect()->prepare($sql);
+
+        return $this;
+    }
+
+    /**
+     * get prepare statement
+     *
+     * @return \PDOStatement | null
+     */
+    public function getStatement()
+    {
+        return $this->statement;
     }
 
     /**

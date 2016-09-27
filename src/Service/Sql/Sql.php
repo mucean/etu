@@ -14,6 +14,10 @@ use PDO;
  */
 class Sql extends Service
 {
+    /**
+     * PDO instance
+     * @var PDO
+     */
     protected $handler;
 
     protected $errorHandler;
@@ -48,21 +52,11 @@ class Sql extends Service
     /**
      * update database
      *
-     * $set = [
-     *     'set' => 'aa = bb, cc= ?',
-     *     'values' => ['cc'];
-     * ];
-     * @return int
+     * @return Command\Update
      */
-    public function update($table, array $set, array $where)
+    public function update($table)
     {
-        $set = $this->formatParams($set, 'set');
-        $where = $this->formatParams($where, 'where');
-
-        $values = array_merge($set['values'], $where['values']);
-        $statement = $this->prepareUpdate($table, $set['set'], $where['where']);
-
-        return $this->execute($statement, $values)->rowCount();
+        return new Command\Update($this, $table);
     }
 
     /**
@@ -117,7 +111,7 @@ class Sql extends Service
      *
      * @return PDOStatement
      */
-    public function execute($sql, array $parameters)
+    public function execute($sql, array $parameters = [])
     {
         $statement = $sql;
         if (!$statement instanceof PDOStatement) {

@@ -101,7 +101,6 @@ class Update
             $values = array_merge($this->values, $this->whereValues);
         }
 
-        //return $this->service->update($this->table, $sets, $where);
         if (!$this->statement->execute($values)) {
             return false;
         }
@@ -127,13 +126,7 @@ class Update
             $sets = implode(',', $sets);
         }
 
-        if ($where === null) {
-            $where = $this->whereColumns;
-        }
-
-        if (is_array($where)) {
-            $where = $this->normalizeWhereColumns($where);
-        }
+        $where = $this->normalizeWhereColumns($where);
 
         if ($where) {
             $where = sprintf(' WHERE %s', $where);
@@ -142,6 +135,8 @@ class Update
         $sql = sprintf('UPDATE %s SET %s%s', $table, $sets, (string) $where);
 
         $this->statement = $this->service->connect()->prepare($sql);
+
+        $this->needPrepare = false;
 
         return $this;
     }
@@ -170,12 +165,10 @@ class Update
                 $this->values = [];
                 break;
             case self::RESET_SCOPE_WHERE:
-                $this->whereColumns = [];
-                $this->whereValues = [];
+                $this->resetWhere();
                 break;
             default:
-                $this->whereColumns = [];
-                $this->whereValues = [];
+                $this->resetWhere();
                 $this->sets = [];
                 $this->values = [];
                 break;

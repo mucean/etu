@@ -13,7 +13,7 @@ trait Where
      *
      * @var array
      */
-    protected $whereColumns = [];
+    protected $whereConditions = [];
 
     /**
      * where values
@@ -27,9 +27,9 @@ trait Where
      *
      * @return $this
      */
-    public function where($column, $values)
+    public function where($condition, $values)
     {
-        $this->whereColumns[] = (string) $column;
+        $this->whereConditions[] = (string) $condition;
 
         if (!is_array($values)) {
             $values = array_slice(func_get_args(), 1);
@@ -43,25 +43,50 @@ trait Where
     /**
      * sql where in
      *
+     * @example
+     * $example->whereIn('id', 1, 2, 3);
+     * $example->whereIn('id', [1, 2, 3]);
+     *
+     * $select = $db->select('aa');
+     * $update = $db->update('bb');
+     * $update->whereIn('id', $select->setColumns('a_id')->where('fruit', 'apple'));
+     *
      * @return $this
      */
-    public function whereIn($column, $values)
+    public function whereIn($condition, $values)
     {
-        return $this;
     }
-    
 
     /**
      * normalize where columns for PDO prepare
      *
      * @return string
      */
-    protected function normalizeWhereColumns(array $columns)
+    protected function normalizeWhereColumns($conditions = null)
     {
-        if ($columns === []) {
+        if ($conditions === null) {
+            $conditions = $this->whereConditions;
+        }
+
+        if (!is_array($conditions)) {
+            $conditions = [$conditions];
+        }
+
+        if ($conditions === []) {
             return '';
         }
 
-        return sprintf('(%s)', implode(') AND (', $columns));
+        return sprintf('(%s)', implode(') AND (', $conditions));
+    }
+
+    /**
+     * reset where conditions and values
+     *
+     * @return void
+     */
+    protected function resetWhere()
+    {
+        $this->whereConditions = [];
+        $this->whereValues = [];
     }
 }

@@ -67,6 +67,8 @@ class Update
     /**
      * columns that want to update
      *
+     * @param $column string
+     * @param $values mixed
      * @return Update
      */
     public function set($column, $values)
@@ -89,6 +91,7 @@ class Update
     /**
      * execute update command
      *
+     * @param $values array
      * @return int
      */
     public function execute(array $values = null)
@@ -104,13 +107,17 @@ class Update
         if (!$this->statement->execute($values)) {
             return false;
         }
+
         return $this->statement->rowCount();
     }
 
     /**
      * prepare update sql
      *
-     * @return PDOStatement
+     * @param $sets string | array
+     * @param $where string | array
+     * @param $table string
+     * @return Update
      */
     public function prepare($sets = null, $where = null, $table = null)
     {
@@ -132,7 +139,12 @@ class Update
             $where = sprintf(' WHERE %s', $where);
         }
 
-        $sql = sprintf('UPDATE %s SET %s%s', $table, $sets, (string) $where);
+        $sql = sprintf(
+            'UPDATE %s SET %s%s',
+            $this->service->quoteIdentifier($table),
+            $sets,
+            (string) $where
+        );
 
         $this->statement = $this->service->connect()->prepare($sql);
 
@@ -154,6 +166,7 @@ class Update
     /**
      * reset parameters
      *
+     * @param $scope string
      * @return void
      */
     public function reset($scope = self::RESET_SCOPE_ALL)

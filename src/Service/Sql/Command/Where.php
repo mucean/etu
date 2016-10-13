@@ -25,6 +25,8 @@ trait Where
     /**
      * columns that want to where
      *
+     * @param $condition string | object
+     * @param $values mixed
      * @return $this
      */
     public function where($condition, $values)
@@ -51,6 +53,8 @@ trait Where
      * $update = $db->update('bb');
      * $update->whereIn('id', $select->setColumns('a_id')->where('fruit', 'apple'));
      *
+     * @param $condition string
+     * @param $values mixed
      * @return $this
      */
     public function whereIn($condition, $values)
@@ -60,6 +64,7 @@ trait Where
     /**
      * normalize where columns for PDO prepare
      *
+     * @param $conditions string | array
      * @return string
      */
     protected function normalizeWhereColumns($conditions = null)

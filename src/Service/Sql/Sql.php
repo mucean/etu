@@ -3,6 +3,7 @@
 namespace Etu\Service\Sql;
 
 use Etu\Service;
+use Etu\Service\Exception as ServiceException;
 use InvalidArgumentException;
 use Exception;
 use PDOStatement;
@@ -20,9 +21,19 @@ class Sql extends Service
      */
     protected $handler;
 
+    /**
+     * callable error handler
+     *
+     * @var callable
+     */
     protected $errorHandler;
 
-    protected $identifier = '`';
+    /**
+     * identifier quote string
+     *
+     * @var string
+     */
+    protected $quoteSymbol = '`';
 
     public function __construct(array $config)
     {
@@ -38,7 +49,7 @@ class Sql extends Service
         $handler = $this->connect();
         $arguments === []
             ? $handler->$method()
-            : call_user_method_array($method, $handler, $arguments);
+            : call_user_func_array([$handler, $method], $arguments);
     }
 
     /**
@@ -52,47 +63,20 @@ class Sql extends Service
     /**
      * update database
      *
+     * @param $table string
      * @return Command\Update
      */
     public function update($table)
     {
         return new Command\Update($this, $table);
     }
-
-    /**
-     * format params
-     *
-     * @return array
-     */
-    public function formatParams(array $params, $key)
-    {
-        if (!array_key_exists($key, $params)) {
-            throw new InvalidArgumentException(sprintf('key `%s` is not existed'));
-        }
-
-        if (!array_key_exists('values', $params)) {
-            throw new InvalidArgumentException('key `values` is not existed');
-        }
-
-        $prepareStr = '';
-        $values = $params['values'];
-        if (is_array($params[$key])) {
-            foreach ($params[$key] as $value) {
-                $prepareStr .= implode(' ', $params[$key]);
-            }
-        } else {
-            $prepareStr = $params['set'];
-        }
-
-        return [
-            $key => $prepareStr,
-            'values' => $values
-        ];
-    }
     
     /**
      * prepare update sql
      *
+     * @param $table string
+     * @param $set string
+     * @param $where string
      * @return PDOStatement
      */
     public function prepareUpdate($table, $set, $where)
@@ -109,6 +93,9 @@ class Sql extends Service
     /**
      * execute a sql
      *
+     * @param $sql string | PDOStatement
+     * @param $parameters array
+     * @throws Exception
      * @return PDOStatement
      */
     public function execute($sql, array $parameters = [])
@@ -128,6 +115,7 @@ class Sql extends Service
     /**
      * quote sql identifier
      *
+     * @param $identifier string | array
      * @return string
      */
     public function quoteIdentifier($identifier)
@@ -136,11 +124,25 @@ class Sql extends Service
             return array_map([$this, 'quoteIdentifier'], $identifier);
         }
 
-        $identifier = str_replace(['\'', '"', ';'], $this->identifier, $identifier);
+        $identifier = str_replace(['\'', '"', ';'], '', $identifier);
 
-        return $identifier;
+        $items = explode('.', $identifier);
+
+        $quoteSymbol = $this->quoteSymbol;
+
+        array_walk($items, function (&$item) use ($quoteSymbol) {
+            $item = sprintf('%s%s%s', $quoteSymbol, $item, $quoteSymbol);
+        });
+
+        return implode('.', $items);
     }
 
+    /**
+     * connect service
+     *
+     * @return PDO
+     * @throws ServiceException
+     */
     public function connect()
     {
         if ($this->isConnected()) {
@@ -157,26 +159,41 @@ class Sql extends Service
             $db = new PDO($dsn, $user, $password, $options);
         } catch (Exception $e) {
             $this->handleError($e);
-            throw new Exception('connect to database failed');
+            throw new ServiceException($e->getMessage());
         }
 
         return $this->handler = $db;
     }
 
+    /**
+     * pdo is connected
+     *
+     * @return bool
+     */
     public function isConnected()
     {
         return $this->handler instanceof PDO;
     }
 
+    /**
+     * set handle pdo connect failed exception
+     *
+     * @param callable $handler
+     */
     public function setErrorHandler(callable $handler)
     {
         $this->errorHandler = $handler;
     }
 
+    /**
+     * handle pdo connect failed exception
+     *
+     * @param Exception $e
+     */
     protected function handleError(Exception $e)
     {
         if (is_callable($this->errorHandler)) {
-            $this->errorHandler($e);
+            call_user_func($this->errorHandler, $e);
         }
     }
 }

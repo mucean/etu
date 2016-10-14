@@ -2,6 +2,8 @@
 
 namespace Etu\Service\Sql\Command;
 
+use Etu\Service;
+
 /**
  * Trait Where
  * @author mucean
@@ -46,7 +48,6 @@ trait Where
      * sql where in
      *
      * @example
-     * $example->whereIn('id', 1, 2, 3);
      * $example->whereIn('id', [1, 2, 3]);
      *
      * $select = $db->select('aa');
@@ -54,11 +55,38 @@ trait Where
      * $update->whereIn('id', $select->setColumns('a_id')->where('fruit', 'apple'));
      *
      * @param $condition string
-     * @param $values mixed
+     * @param $values array | Select
      * @return $this
      */
     public function whereIn($condition, $values)
     {
+        return $this->whereInOrNotIn($condition, $values, 'in');
+    }
+
+    /**
+     * like $this->whereIn function
+     *
+     * @param $condition string
+     * @param $values array | Select
+     * @return $this
+     */
+    public function whereNotIn($condition, $values)
+    {
+        return $this->whereInOrNotIn($condition, $values, 'not in');
+    }
+
+    protected function whereInOrNotIn($condition, $values, $either = 'in')
+    {
+        if ($values instanceof Select) {
+            $condition = sprintf('%s %s (%s)', $condition, $either, $values->getPrepareSql());
+            $values = $values->getParams();
+        } else {
+            $condition = sprintf('%s %s (%s)', $condition, $either, rtrim(str_repeat('?,', count($values)), ','));
+        }
+
+        $this->where($condition, $values);
+
+        return $this;
     }
 
     /**

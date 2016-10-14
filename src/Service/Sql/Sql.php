@@ -47,7 +47,7 @@ class Sql extends Service
     public function __call($method, $arguments)
     {
         $handler = $this->connect();
-        $arguments === []
+        return $arguments === []
             ? $handler->$method()
             : call_user_func_array([$handler, $method], $arguments);
     }

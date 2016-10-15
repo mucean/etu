@@ -1,6 +1,6 @@
 <?php
 
-namespace Etu\Service\Sql;
+namespace Etu\Service;
 
 use Etu\Service;
 use Etu\Service\Exception as ServiceException;
@@ -64,30 +64,11 @@ class Sql extends Service
      * update database
      *
      * @param $table string
-     * @return Command\Update
+     * @return Sql\Command\Update
      */
     public function update($table)
     {
-        return new Command\Update($this, $table);
-    }
-    
-    /**
-     * prepare update sql
-     *
-     * @param $table string
-     * @param $set string
-     * @param $where string
-     * @return PDOStatement
-     */
-    public function prepareUpdate($table, $set, $where)
-    {
-        if ($where !== '') {
-            $where = sprintf(' WHERE %s', $where);
-        }
-
-        $sql = sprintf('UPDATE %s SET %s%s', $table, $set, $where);
-
-        return $this->connect()->prepare($sql);
+        return new Sql\Command\Update($this, $table);
     }
 
     /**

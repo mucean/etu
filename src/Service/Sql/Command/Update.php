@@ -2,7 +2,7 @@
 
 namespace Etu\Service\Sql\Command;
 
-use Etu\Service\Sql\Sql;
+use Etu\Service\Sql;
 
 /**
  * sql update command

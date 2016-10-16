@@ -60,6 +60,11 @@ class Sql extends Service
         return $this->connect();
     }
 
+    public function select($table)
+    {
+        return new Sql\Command\Select($this, $table);
+    }
+
     /**
      * update database
      *

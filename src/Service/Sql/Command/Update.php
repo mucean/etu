@@ -2,29 +2,15 @@
 
 namespace Etu\Service\Sql\Command;
 
-use Etu\Service\Sql;
+use Etu\Service\Sql\Command;
 
 /**
  * sql update command
  * @author mucean
  */
-class Update
+class Update extends Command
 {
     use Where;
-
-    /**
-     * sql database service
-     *
-     * @var Sql
-     */
-    protected $service;
-
-    /**
-     * database table name
-     *
-     * @var string
-     */
-    protected $table;
 
     /**
      * update set columns
@@ -40,29 +26,9 @@ class Update
      */
     protected $values = [];
 
-    /**
-     * is need to prepare sql
-     *
-     * @var bool
-     */
-    protected $needPrepare = true;
-
-    /**
-     * PDO prepared statement
-     *
-     * @var \PDOStatement
-     */
-    protected $statement;
-
     const RESET_SCOPE_ALL = 'all';
     const RESET_SCOPE_SET = 'set';
     const RESET_SCOPE_WHERE = 'where';
-
-    public function __construct(Sql $service, $table)
-    {
-        $this->service = $service;
-        $this->table = (string) $table;
-    }
 
     /**
      * columns that want to update
@@ -73,9 +39,7 @@ class Update
      */
     public function set($column, $values)
     {
-        if ($this->needPrepare === false) {
-            $this->needPrepare = true;
-        }
+        $this->needToPrepare();
 
         $this->sets[] = (string) $column;
 
@@ -87,7 +51,7 @@ class Update
 
         return $this;
     }
-    
+
     /**
      * execute update command
      *
@@ -96,71 +60,7 @@ class Update
      */
     public function execute(array $values = null)
     {
-        if ($this->needPrepare === true) {
-            $this->prepare();
-        }
-
-        if ($values === null) {
-            $values = array_merge($this->values, $this->whereValues);
-        }
-
-        if (!$this->statement->execute($values)) {
-            return false;
-        }
-
-        return $this->statement->rowCount();
-    }
-
-    /**
-     * prepare update sql
-     *
-     * @param $sets string | array
-     * @param $where string | array
-     * @param $table string
-     * @return Update
-     */
-    public function prepare($sets = null, $where = null, $table = null)
-    {
-        if ($table === null) {
-            $table = $this->table;
-        }
-
-        if ($sets === null) {
-            $sets = $this->sets;
-        }
-
-        if (is_array($sets)) {
-            $sets = implode(',', $sets);
-        }
-
-        $where = $this->normalizeWhereColumns($where);
-
-        if ($where) {
-            $where = sprintf(' WHERE %s', $where);
-        }
-
-        $sql = sprintf(
-            'UPDATE %s SET %s%s',
-            $this->service->quoteIdentifier($table),
-            $sets,
-            (string) $where
-        );
-
-        $this->statement = $this->service->connect()->prepare($sql);
-
-        $this->needPrepare = false;
-
-        return $this;
-    }
-
-    /**
-     * get prepare statement
-     *
-     * @return \PDOStatement | null
-     */
-    public function getStatement()
-    {
-        return $this->statement;
+        return parent::execute($values)->rowCount();
     }
 
     /**
@@ -171,7 +71,7 @@ class Update
      */
     public function reset($scope = self::RESET_SCOPE_ALL)
     {
-        $this->needPrepare = true;
+        $this->needToPrepare();
         switch ($scope) {
             case self::RESET_SCOPE_SET:
                 $this->sets = [];
@@ -186,5 +86,51 @@ class Update
                 $this->values = [];
                 break;
         }
+    }
+
+    /**
+     * get sql for prepared
+     * @param null $sets
+     * @param null $where
+     * @param null $table
+     * @return string
+     */
+    public function getPrepareSql($sets = null, $where = null, $table = null)
+    {
+        if ($this->needPrepare === false) {
+            return $this->sqlForPrepare;
+        }
+
+        if ($table === null) {
+            $table = $this->table;
+        }
+
+        if ($sets === null) {
+            $sets = $this->sets;
+        }
+
+        if (is_array($sets)) {
+            $sets = implode(',', $sets);
+        }
+
+        $where = $this->normalizeWhereColumns($where);
+
+        $sql = sprintf(
+            'UPDATE %s SET %s%s',
+            $this->service->quoteIdentifier($table),
+            $sets,
+            (string) $where
+        );
+
+        return $this->sqlForPrepare = $sql;
+    }
+
+    /**
+     * get params of PDOStatement's method execute
+     * @return array
+     */
+    public function getParams()
+    {
+        return array_merge($this->values, $this->whereValues);
     }
 }

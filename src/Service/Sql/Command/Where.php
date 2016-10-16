@@ -33,6 +33,7 @@ trait Where
      */
     public function where($condition, $values)
     {
+        $this->needToPrepare();
         $this->whereConditions[] = (string) $condition;
 
         if (!is_array($values)) {
@@ -77,6 +78,7 @@ trait Where
 
     protected function whereInOrNotIn($condition, $values, $either = 'in')
     {
+        $this->needToPrepare();
         if ($values instanceof Select) {
             $condition = sprintf('%s %s (%s)', $condition, $either, $values->getPrepareSql());
             $values = $values->getParams();
@@ -109,7 +111,7 @@ trait Where
             return '';
         }
 
-        return sprintf('(%s)', implode(') AND (', $conditions));
+        return sprintf(' WHERE (%s)', implode(') AND (', $conditions));
     }
 
     /**

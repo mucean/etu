@@ -195,4 +195,9 @@ class Select extends Command
 
         return $values;
     }
+
+    public function reset()
+    {
+        // TODO code this
+    }
 }

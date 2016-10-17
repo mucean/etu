@@ -8,7 +8,7 @@ class Insert extends Command
 {
     /**
      * insert command columns
-     * @var array
+     * @var array | null
      */
     protected $columns = [];
 
@@ -25,11 +25,14 @@ class Insert extends Command
      * columns of insert command need to set
      * @param $columns
      * @return $this
+     * @example
+     * $insert->setColumns(['aa', 'bb']);
+     * $insert->serColumns([['aa', 'bb'], ['cc', 'dd']]);
      */
     public function setColumns($columns)
     {
         if (is_array($columns) === false) {
-            $columns = array_slice(func_get_args(), 1);
+            $columns = func_get_args();
         }
 
         $this->columns = array_merge($this->columns, $columns);
@@ -44,25 +47,44 @@ class Insert extends Command
      */
     public function setValues(array $values)
     {
-        $this->values[] = $values;
+        if (array_key_exists(0, $values) === false) {
+            return $this;
+        }
+
+        if (is_array($values[0])) {
+            $this->values = array_merge($this->values, $values);
+        } else {
+            $this->values[] = $values;
+        }
 
         return $this;
     }
 
+    /**
+     * execute insert command
+     *
+     * @param $values array
+     * @return int
+     */
+    public function execute(array $values = null)
+    {
+        return parent::execute($values)->rowCount();
+    }
+
     public function getPrepareSql()
     {
-        $sql = 'INSET INTO %s%s%s';
+        $sql = 'INSERT INTO %s%s%s';
 
         $columns = '';
         if ($this->columns !== []) {
-            $columns = implode(',', $this->columns);
+            $columns = sprintf(' (%s)', implode(',', $this->columns));
         }
 
         $values = '';
         if ($this->values !== []) {
             $values = sprintf('(%s)', rtrim(str_repeat('?,', count($this->columns)), ','));
 
-            $values = rtrim(str_repeat($values . ',', count($this->values)), ',');
+            $values = sprintf(' VALUES %s', rtrim(str_repeat($values . ',', count($this->values)), ','));
         }
 
         return sprintf($sql, $this->service->quoteIdentifier($this->table), $columns, $values);

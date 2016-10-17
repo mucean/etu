@@ -55,7 +55,7 @@ class Select extends Command
         $this->needToPrepare();
 
         if (is_array($columns) === false) {
-            $columns = array_slice(func_get_args(), 1);
+            $columns = func_get_args();
         }
 
         $this->columns = array_merge($this->columns, $columns);

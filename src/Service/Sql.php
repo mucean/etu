@@ -77,6 +77,16 @@ class Sql extends Service
     }
 
     /**
+     * insert command class
+     * @param $table
+     * @return Sql\Command\Insert
+     */
+    public function insert($table)
+    {
+        return new Sql\Command\Insert($this, $table);
+    }
+
+    /**
      * execute a sql
      *
      * @param $sql string | PDOStatement

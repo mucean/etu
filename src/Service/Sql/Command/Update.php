@@ -26,9 +26,8 @@ class Update extends Command
      */
     protected $values = [];
 
-    const RESET_SCOPE_ALL = 'all';
-    const RESET_SCOPE_SET = 'set';
     const RESET_SCOPE_WHERE = 'where';
+    const RESET_SCOPE_SET = 'set';
 
     /**
      * columns that want to update
@@ -71,7 +70,8 @@ class Update extends Command
      */
     public function reset($scope = self::RESET_SCOPE_ALL)
     {
-        $this->needToPrepare();
+        parent::reset($scope);
+
         switch ($scope) {
             case self::RESET_SCOPE_SET:
                 $this->sets = [];
@@ -80,7 +80,7 @@ class Update extends Command
             case self::RESET_SCOPE_WHERE:
                 $this->resetWhere();
                 break;
-            default:
+            case self::RESET_SCOPE_ALL:
                 $this->resetWhere();
                 $this->sets = [];
                 $this->values = [];
@@ -132,5 +132,10 @@ class Update extends Command
     public function getParams()
     {
         return array_merge($this->values, $this->whereValues);
+    }
+
+    public function nextPrepare()
+    {
+        $this->needPrepare = false;
     }
 }

@@ -29,6 +29,8 @@ abstract class Command
 
     protected $sqlForPrepare;
 
+    const RESET_SCOPE_ALL = 'all';
+
     public function __construct(Sql $service, $table)
     {
         $this->service = $service;
@@ -52,6 +54,7 @@ abstract class Command
     {
         if ($this->needPrepare === true) {
             $this->prepare();
+            $this->nextPrepare();
         }
 
         if ($values === null) {
@@ -71,8 +74,6 @@ abstract class Command
     {
         $sql = $this->getPrepareSql();
         $this->statement = $this->service->connect()->prepare($sql);
-
-        $this->needPrepare = false;
 
         return $this->statement;
     }
@@ -99,6 +100,25 @@ abstract class Command
         if ($this->needPrepare === false) {
             $this->needPrepare = true;
         }
+    }
+
+    /**
+     * execute this after execute prepare
+     */
+    protected function nextPrepare()
+    {
+    }
+
+    /**
+     * reset params
+     * @param string $scope
+     */
+    protected function reset($scope = self::RESET_SCOPE_ALL)
+    {
+        if (is_array($scope)) {
+            array_map([$this, 'reset'], $scope);
+        }
+        $this->needToPrepare();
     }
 
     /**

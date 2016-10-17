@@ -38,6 +38,13 @@ class Select extends Command
      */
     protected $limitNumber;
 
+    const RESET_SCOPE_COLUMNS = 'columns';
+    const RESET_SCOPE_WHERE = 'where';
+    const RESET_SCOPE_ORDER_BY = 'orderBy';
+    const RESET_SCOPE_GROUP_BY = 'groupBy';
+    const RESET_SCOPE_OFFSET = 'offset';
+    const RESET_SCOPE_LIMIT = 'limit';
+
     /**
      * set select columns
      * @param $columns mixed
@@ -196,8 +203,42 @@ class Select extends Command
         return $values;
     }
 
-    public function reset()
+    public function nextPrepare()
     {
-        // TODO code this
+        $this->needPrepare = false;
+    }
+
+    public function reset($scope = self::RESET_SCOPE_ALL)
+    {
+        parent::reset($scope);
+
+        switch ($scope) {
+            case self::RESET_SCOPE_COLUMNS:
+                $this->columns = [];
+                break;
+            case self::RESET_SCOPE_WHERE:
+                $this->resetWhere();
+                break;
+            case self::RESET_SCOPE_GROUP_BY:
+                $this->groupByPart = null;
+                break;
+            case self::RESET_SCOPE_ORDER_BY:
+                $this->orderByPart = null;
+                break;
+            case self::RESET_SCOPE_OFFSET:
+                $this->offsetNumber = null;
+                break;
+            case self::RESET_SCOPE_LIMIT:
+                $this->limitNumber = null;
+                break;
+            case self::RESET_SCOPE_ALL:
+                $this->columns = [];
+                $this->resetWhere();
+                $this->groupByPart = null;
+                $this->orderByPart = null;
+                $this->offsetNumber = null;
+                $this->limitNumber = null;
+                break;
+        }
     }
 }

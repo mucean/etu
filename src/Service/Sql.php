@@ -77,13 +77,23 @@ class Sql extends Service
     }
 
     /**
-     * insert command class
+     * insert command
      * @param $table
      * @return Sql\Command\Insert
      */
     public function insert($table)
     {
         return new Sql\Command\Insert($this, $table);
+    }
+
+    /**
+     * delete command
+     * @param $table
+     * @return Sql\Command\Delete
+     */
+    public function delete($table)
+    {
+        return new Sql\Command\Delete($this, $table);
     }
 
     /**

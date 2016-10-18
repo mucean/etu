@@ -78,7 +78,6 @@ trait Where
 
     protected function whereInOrNotIn($condition, $values, $either = 'in')
     {
-        $this->needToPrepare();
         if ($values instanceof Select) {
             $condition = sprintf('%s %s (%s)', $condition, $either, $values->getPrepareSql());
             $values = $values->getParams();

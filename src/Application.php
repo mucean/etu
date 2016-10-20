@@ -1,4 +1,5 @@
 <?php
+
 namespace Etu;
 
 use Etu\Traits\EtuMiddleware as Middleware;
@@ -32,6 +33,7 @@ class Application
     /**
      * run app handle request
      *
+     * @param bool $silent
      * @return ResponseInterface
      */
     public function run($silent = false)
@@ -134,10 +136,11 @@ class Application
      * Register a namespace bind directory for auto load class
      *
      * @param string   $dir       The directory
-     * @param string   $namespace The classname
-     * @param callable $func      callable functiontion of user defined
+     * @param string   $namespace The class name
+     * @param callable $func      callable function of user defined
+     * @throws Exception
      *
-     * @return null
+     * @return void
      */
     public static function registerNamespace($dir, $namespace, callable $func = null)
     {

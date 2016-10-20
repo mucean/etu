@@ -42,10 +42,6 @@ class Response extends Message implements ResponseInterface
         403 => 'Forbidden',
         404 => 'Not Found',
         405 => 'Method Not Allowed',
-        402 => 'Payment Required',
-        403 => 'Forbidden',
-        404 => 'Not Found',
-        405 => 'Method Not Allowed',
         406 => 'Not Acceptable',
         407 => 'Proxy Authentication Required',
         408 => 'Request Timeout',
@@ -132,6 +128,7 @@ class Response extends Message implements ResponseInterface
 
     public function redirect($url, $statusCode = 302)
     {
+        /** @var $new Response */
         $new = $this->withHeader('Location', (string) $url);
 
         if ($new->getStatusCode() === 200) {

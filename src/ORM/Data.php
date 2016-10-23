@@ -4,15 +4,23 @@ namespace Etu\ORM;
 
 abstract class Data
 {
-    protected static $mapper = '\Etu\ORM\Mapper';
+    protected static $mapperName = '\Etu\ORM\Mapper';
 
-    protected static $mapperConfig = [
-        'service' => ''
+    protected static $mapperOptions = [
     ];
 
-    public static function getConfig()
+    protected static $mapper;
+
+    /**
+     *
+     * @var array
+     */
+    protected $values;
+
+    public function pack(array $values)
     {
-        ;
+        $this->values = $values;
+        return $this;
     }
 
     /**
@@ -22,6 +30,19 @@ abstract class Data
      */
     public static function find($primaryId)
     {
-        return new static();
+        $data = static::getMapper()->find($primaryId);
+        return (new static())->pack($data);
+    }
+
+    /**
+     * @return \Etu\ORM\Mapper
+     */
+    public static function getMapper()
+    {
+        if (static::$mapper !== null) {
+            return static::$mapper;
+        }
+
+        return static::$mapper = new static::$mapperName(static::$mapperOptions);
     }
 }

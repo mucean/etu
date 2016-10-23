@@ -8,4 +8,5 @@ namespace Etu\ORM;
  */
 abstract class Mapper
 {
+    abstract public function find($primaryId);
 }

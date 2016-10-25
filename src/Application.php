@@ -19,7 +19,7 @@ class Application
     public function __construct($container = [])
     {
         if (is_array($container)) {
-            $container = Container::getInstance($container);
+            $container = new Container($container);
         }
 
         if (!($container instanceof Container)) {
@@ -32,6 +32,7 @@ class Application
     /**
      * run app handle request
      *
+     * @param bool $silent
      * @return ResponseInterface
      */
     public function run($silent = false)
@@ -41,7 +42,7 @@ class Application
 
         $response = $this->process($request, $response);
 
-        if (!$silent) {
+        if ($silent === false) {
             $this->response($response);
         }
 
@@ -134,8 +135,8 @@ class Application
      * Register a namespace bind directory for auto load class
      *
      * @param string   $dir       The directory
-     * @param string   $namespace The classname
-     * @param callable $func      callable functiontion of user defined
+     * @param string   $namespace The class name
+     * @param callable $func      callable function of user defined
      * @throws
      *
      * @return void

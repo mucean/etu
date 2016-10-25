@@ -20,7 +20,7 @@ class Error extends AbstractError
             : 'renderHtmlError';
 
         if (!method_exists($this, $renderMethodName)) {
-            throw new RuntimeException(sprintf('%s method do not exists', $renderMethodName));
+            throw new \RuntimeException(sprintf('%s method do not exists', $renderMethodName));
         }
 
         $message = $this->$renderMethodName($error);

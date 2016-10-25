@@ -11,13 +11,15 @@ abstract class Data
 
     protected static $mapper;
 
+    protected $attribute = [];
+
     /**
      *
      * @var array
      */
     protected $values;
 
-    public function pack(array $values)
+    protected function pack(array $values)
     {
         $this->values = $values;
         return $this;

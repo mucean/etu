@@ -20,14 +20,10 @@ class Router
 
     protected $container;
 
-    public function __construct($basePath, $namespace = '\\', Container $container = null)
+    public function __construct($basePath, $namespace = '\\', Container $container)
     {
         $this->basePath = trim($basePath, '/');
         $this->namespace = '\\' . trim($namespace, '\\');
-
-        if ($container === null) {
-            $container = Container::getInstance();
-        }
 
         $this->container = $container;
     }

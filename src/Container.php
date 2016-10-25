@@ -2,7 +2,6 @@
 namespace Etu;
 
 use Etu\Traits\ArrayPropertyAllAccess;
-use Etu\Traits\Singleton;
 use Etu\Http\Context;
 use Etu\Http\Request;
 use Etu\Http\Response;
@@ -13,11 +12,11 @@ use InvalidArgumentException;
 
 class Container
 {
-    use Singleton, ArrayPropertyAllAccess;
+    use ArrayPropertyAllAccess;
 
     protected $container = [];
 
-    protected $mantain = [];
+    protected $maintain = [];
 
     protected $calls = [];
 
@@ -25,11 +24,11 @@ class Container
         'showErrorDetails' => false
     ];
 
-    protected function __construct(array $items)
+    public function __construct(array $items = [])
     {
         $this->registerPropertyAccess('container', true);
 
-        $this->registerPropertyAccess('mantain', true);
+        $this->registerPropertyAccess('maintain', true);
 
         $this->registerPropertyAccess('calls', true);
 
@@ -70,7 +69,7 @@ class Container
         if (is_callable($value) && !$this->hasProperty('calls', [$id])) {
             $call = $value;
             $value = call_user_func_array($value, $arguments);
-            if (!$this->hasProperty('mantain', [$id])) {
+            if (!$this->hasProperty('maintain', [$id])) {
                 $this->setProperty('calls', [$id], $call);
                 $this->setProperty('container', [$id], $value);
             }
@@ -81,7 +80,7 @@ class Container
 
     public function has($id)
     {
-        return $this->hasProperty('container', [$id]);
+        return $this->hasProperty('container', $id);
     }
 
     public function add($id, $value, $bindThis = true)
@@ -109,37 +108,37 @@ class Container
     public function remove($id)
     {
         $this->unsetProperty('container', [$id]);
-        $this->unsetProperty('mantain', [$id]);
+        $this->unsetProperty('maintain', [$id]);
         $this->unsetProperty('calls', [$id]);
     }
 
     public function getCalledCall($id)
     {
-        if (!$this->hasProperty('calls', [$id])) {
+        if (!$this->hasProperty('calls', $id)) {
             throw new InvalidArgumentException(
                 sprintf('Identifier %s is not found or not called', $id)
             );
         }
 
-        return $this->getProperty('calls', [$id]);
+        return $this->getProperty('calls', $id);
     }
 
-    public function mantain($id)
+    public function maintain($id)
     {
         if (!$this->has($id)) {
             throw new InvalidArgumentException(sprintf('Identifier %s is not found', $id));
         }
 
-        if ($this->hasProperty('calls', [$id])) {
-            throw new InvalidArgumentException('service has been called, can not mantain');
+        if ($this->hasProperty('calls', $id)) {
+            throw new InvalidArgumentException('service has been called, can not maintain');
         }
 
-        $value = $this->getProperty('container', [$id]);
+        $value = $this->getProperty('container', $id);
         if (!is_callable($value)) {
-            throw new InvalidArgumentException('mantain service must be a callable function or object');
+            throw new InvalidArgumentException('maintain service must be a callable function or object');
         }
 
-        $this->setProperty('mantain', [$id], true);
+        $this->setProperty('maintain', $id, true);
     }
 
     protected function registerDefaultServices()
@@ -165,7 +164,7 @@ class Container
 
         if (!$this->has('router')) {
             $this->add('router', function ($path = '/Controller', $namespace = '\\') {
-                return new Router($path, $namespace);
+                return new Router($path, $namespace, $this);
             }, false);
         }
 

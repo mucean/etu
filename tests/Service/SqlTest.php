@@ -2,7 +2,7 @@
 
 namespace Tests\Service;
 
-use Etu\Service\Sql\Sql;
+use Etu\Service\Sql;
 
 /**
  * Class SqlTest
@@ -15,7 +15,7 @@ class SqlTest extends \PHPUnit_Framework_TestCase
     public function __construct()
     {
         $this->db = new Sql([
-            'dsn' => 'mysql:host=127.0.0.1;dbname=lottery',
+            'dsn' => 'mysql:host=127.0.0.1;dbname=test',
             'user' => 'root',
             'password' => 'omymysql'
         ]);

@@ -27,7 +27,7 @@ class MiddlewareTest extends \PHPUnit_Framework_TestCase
             return $response->write('5');
         });
 
-        $container = Container::getInstance();
+        $container = new Container();
         $response = $this->executeMiddleware($container->get('request'), $container->get('response'));
 
         $this->assertEquals('12345', (string) $response->getBody());

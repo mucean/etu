@@ -7,7 +7,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 {
     public function testConstruct()
     {
-        $container = Container::getInstance();
+        $container = new Container();
         $this->assertInstanceOf('Etu\Container', $container);
         return $container;
     }
@@ -88,7 +88,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     /**
      * @depends testConstruct
      */
-    public function testMantain(Container $container)
+    public function testMaintain(Container $container)
     {
         $context = $container->get('context');
         $iden = 'Closure';
@@ -96,7 +96,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
             return $this->get('context');
         };
         $container->add($iden, $value);
-        $container->mantain($iden);
+        $container->maintain($iden);
         $this->assertEquals($context, $container->get($iden));
         $this->setExpectedException(
             'InvalidArgumentException',
@@ -108,7 +108,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     /**
      * @depends testConstruct
      */
-    public function testCalledCanNotMantain(Container $container)
+    public function testCalledCanNotMaintain(Container $container)
     {
         $context = $container->get('context');
         $iden = 'Closure';
@@ -119,24 +119,24 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($context, $container->get($iden));
         $this->setExpectedException(
             'InvalidArgumentException',
-            'service has been called, can not mantain'
+            'service has been called, can not maintain'
         );
-        $container->mantain($iden);
+        $container->maintain($iden);
     }
 
     /**
      * @depends testConstruct
      */
-    public function testNotCallableCanNotMantain(Container $container)
+    public function testNotCallableCanNotMaintain(Container $container)
     {
         $iden = 'hi';
         $value = 'Hello, world!';
         $container->add($iden, $value);
         $this->setExpectedException(
             'InvalidArgumentException',
-            'mantain service must be a callable function or object'
+            'maintain service must be a callable function or object'
         );
-        $container->mantain($iden);
+        $container->maintain($iden);
     }
 
     /**

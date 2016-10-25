@@ -5,6 +5,7 @@ use Tests\Http\BuildContext;
 use Etu\Http\Request;
 use Etu\Http\Response;
 use Etu\Router;
+use Etu\Container;
 
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
@@ -24,7 +25,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
     public function testConstruct()
     {
-        $router = new Router('/Router', '\\Tests');
+        $router = new Router('/Router', '\\Tests', new Container());
         $this->assertInstanceOf('Etu\Router', $router);
 
         return $router;

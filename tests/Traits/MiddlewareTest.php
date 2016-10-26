@@ -4,7 +4,7 @@ namespace Tests\Traits;
 use Etu\Traits\EtuMiddleware as Middleware;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Etu\Container;
+use Etu\AppContainer as Container;
 
 /**
  * Class MiddlewareTest

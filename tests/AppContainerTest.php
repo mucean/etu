@@ -1,7 +1,7 @@
 <?php
 namespace Tests;
 
-use Etu\Container;
+use Etu\AppContainer as Container;
 
 class ContainerTest extends \PHPUnit_Framework_TestCase
 {

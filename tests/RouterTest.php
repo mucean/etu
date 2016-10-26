@@ -5,7 +5,7 @@ use Tests\Http\BuildContext;
 use Etu\Http\Request;
 use Etu\Http\Response;
 use Etu\Router;
-use Etu\Container;
+use Etu\AppContainer as Container;
 
 class RouterTest extends \PHPUnit_Framework_TestCase
 {

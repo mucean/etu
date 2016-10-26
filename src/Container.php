@@ -1,16 +1,12 @@
 <?php
+
 namespace Etu;
 
 use Etu\Traits\ArrayPropertyAllAccess;
-use Etu\Http\Context;
-use Etu\Http\Request;
-use Etu\Http\Response;
-use Etu\Handlers\Error;
-use Etu\Handlers\NotFound;
 use Closure;
 use InvalidArgumentException;
 
-class Container
+abstract class Container
 {
     use ArrayPropertyAllAccess;
 
@@ -24,7 +20,7 @@ class Container
         'showErrorDetails' => false
     ];
 
-    public function __construct(array $items = [])
+    protected function __construct(array $items = [])
     {
         $this->registerPropertyAccess('container', true);
 
@@ -54,8 +50,6 @@ class Container
             }
             call_user_func_array([$this, 'add'], $item);
         }
-
-        $this->registerDefaultServices();
     }
 
     public function get($id, $arguments = [])
@@ -64,14 +58,14 @@ class Container
             throw new InvalidArgumentException(sprintf('Identifier %s is not found', $id));
         }
 
-        $value = $this->getProperty('container', [$id]);
+        $value = $this->getProperty('container', $id);
 
-        if (is_callable($value) && !$this->hasProperty('calls', [$id])) {
+        if (is_callable($value) && !$this->hasProperty('calls', $id)) {
             $call = $value;
             $value = call_user_func_array($value, $arguments);
-            if (!$this->hasProperty('maintain', [$id])) {
-                $this->setProperty('calls', [$id], $call);
-                $this->setProperty('container', [$id], $value);
+            if (!$this->hasProperty('maintain', $id)) {
+                $this->setProperty('calls', $id, $call);
+                $this->setProperty('container', $id, $value);
             }
         }
 
@@ -93,7 +87,7 @@ class Container
             $value = $value->bindTo($this);
         }
 
-        return $this->setProperty('container', [$id], $value);
+        return $this->setProperty('container', $id, $value);
     }
 
     public function update($id, $value)
@@ -102,14 +96,14 @@ class Container
             throw new InvalidArgumentException(sprintf('Identifier %s is not found', $id));
         }
 
-        return $this->setProperty('container', [$id], $value);
+        return $this->setProperty('container', $id, $value);
     }
 
     public function remove($id)
     {
-        $this->unsetProperty('container', [$id]);
-        $this->unsetProperty('maintain', [$id]);
-        $this->unsetProperty('calls', [$id]);
+        $this->unsetProperty('container', $id);
+        $this->unsetProperty('maintain', $id);
+        $this->unsetProperty('calls', $id);
     }
 
     public function getCalledCall($id)
@@ -139,47 +133,5 @@ class Container
         }
 
         $this->setProperty('maintain', $id, true);
-    }
-
-    protected function registerDefaultServices()
-    {
-        if (!$this->has('context')) {
-            $this->add('context', function () {
-                return new Context($_SERVER);
-            }, false);
-        }
-
-        if (!$this->has('request')) {
-            $this->add('request', function () {
-                $context = $this->get('context');
-                return Request::buildFromContext($context);
-            });
-        }
-
-        if (!$this->has('response')) {
-            $this->add('response', function () {
-                return new Response();
-            }, false);
-        }
-
-        if (!$this->has('router')) {
-            $this->add('router', function ($path = '/Controller', $namespace = '\\') {
-                return new Router($path, $namespace, $this);
-            }, false);
-        }
-
-        if (!$this->has('errorHandler')) {
-            $this->add('errorHandler', function () {
-                $setting = $this->get('setting');
-                return new Error($setting->get('showErrorDetails', false));
-            });
-        }
-
-        if (!$this->has('notFoundHandler')) {
-            $this->add('notFoundHandler', function () {
-                $setting = $this->get('setting');
-                return new NotFound($setting->get('showErrorDetails', false));
-            }, false);
-        }
     }
 }

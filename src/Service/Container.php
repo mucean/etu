@@ -8,4 +8,9 @@ use Etu\Traits\Singleton;
 class Container extends BaseContainer
 {
     use Singleton;
+
+    protected function __construct(array $items)
+    {
+        parent::__construct($items);
+    }
 }

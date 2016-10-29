@@ -27,7 +27,7 @@ trait Singleton
      * store and return instance
      *
      * @param  array  $params
-     * @return object
+     * @return static
      */
     public static function getInstance($params = [])
     {

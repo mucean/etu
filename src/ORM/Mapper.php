@@ -9,4 +9,6 @@ namespace Etu\ORM;
 abstract class Mapper
 {
     abstract public function find($primaryId);
+
+    abstract public function getService();
 }

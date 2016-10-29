@@ -1,10 +1,11 @@
 <?php
 namespace Tests\Traits;
 
+use Etu\DefaultServices;
 use Etu\Traits\EtuMiddleware as Middleware;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Etu\AppContainer as Container;
+use Etu\Container;
 
 /**
  * Class MiddlewareTest
@@ -28,6 +29,7 @@ class MiddlewareTest extends \PHPUnit_Framework_TestCase
         });
 
         $container = new Container();
+        DefaultServices::register($container);
         $response = $this->executeMiddleware($container->get('request'), $container->get('response'));
 
         $this->assertEquals('12345', (string) $response->getBody());

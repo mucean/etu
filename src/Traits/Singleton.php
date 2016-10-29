@@ -12,8 +12,8 @@ trait Singleton
     /**
      * instances of singleton mode class
      * @example $instances = [
-     *     'classname1' => $instance1,
-     *     'classname2' => $instance2,
+     *     'className1' => $instance1,
+     *     'className2' => $instance2,
      *     ...
      * ]
      *
@@ -23,7 +23,7 @@ trait Singleton
 
     /**
      * return class instance, if $this->instances exist correspond
-     * class instance, direct return, otherwise new $classname
+     * class instance, direct return, otherwise new $className
      * store and return instance
      *
      * @param  array  $params
@@ -31,15 +31,15 @@ trait Singleton
      */
     public static function getInstance($params = [])
     {
-        $classname = get_called_class();
+        $className = get_called_class();
 
-        if (isset(static::$instances[$classname])) {
-            return static::$instances[$classname];
+        if (isset(static::$instances[$className])) {
+            return static::$instances[$className];
         }
 
-        static::$instances[$classname] = new static($params);
+        static::$instances[$className] = new static($params);
 
-        return static::$instances[$classname];
+        return static::$instances[$className];
     }
 
     protected function __construct() {}

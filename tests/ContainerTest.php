@@ -1,13 +1,15 @@
 <?php
 namespace Tests;
 
-use Etu\AppContainer as Container;
+use Etu\Container;
+use Etu\DefaultServices;
 
 class ContainerTest extends \PHPUnit_Framework_TestCase
 {
     public function testConstruct()
     {
         $container = new Container();
+        DefaultServices::register($container);
         $this->assertInstanceOf('Etu\Container', $container);
         return $container;
     }

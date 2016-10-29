@@ -16,10 +16,20 @@ class Application
 
     protected $container;
 
+    protected $defaultSetting = [
+        'showErrorDetails' => false
+    ];
+
     public function __construct($container = [])
     {
         if (is_array($container)) {
-            $container = new AppContainer($container);
+            if (isset($container['setting']) === false) {
+                $container['setting'] = [];
+            }
+
+            $container['setting'] = array_merge($this->defaultSetting, $container['setting']);
+            $container = new Container($container);
+            DefaultServices::register($container);
         }
 
         if (!($container instanceof Container)) {

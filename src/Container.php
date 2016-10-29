@@ -6,7 +6,7 @@ use Etu\Traits\ArrayPropertyAllAccess;
 use Closure;
 use InvalidArgumentException;
 
-abstract class Container
+class Container
 {
     use ArrayPropertyAllAccess;
 
@@ -16,11 +16,9 @@ abstract class Container
 
     protected $calls = [];
 
-    protected $defaultSetting = [
-        'showErrorDetails' => false
-    ];
+    protected $defaultSetting = [];
 
-    protected function __construct(array $items = [])
+    public function __construct(array $items = [])
     {
         $this->registerPropertyAccess('container', true);
 

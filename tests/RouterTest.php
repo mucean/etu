@@ -1,11 +1,12 @@
 <?php
 namespace Tests;
 
+use Etu\DefaultServices;
 use Tests\Http\BuildContext;
 use Etu\Http\Request;
 use Etu\Http\Response;
 use Etu\Router;
-use Etu\AppContainer as Container;
+use Etu\Container;
 
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
@@ -25,7 +26,9 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
     public function testConstruct()
     {
-        $router = new Router('/Router', '\\Tests', new Container());
+        $container = new Container();
+        DefaultServices::register($container);
+        $router = new Router('/Router', '\\Tests', $container);
         $this->assertInstanceOf('Etu\Router', $router);
 
         return $router;

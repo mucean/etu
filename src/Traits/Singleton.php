@@ -10,36 +10,25 @@ namespace Etu\Traits;
 trait Singleton
 {
     /**
-     * instances of singleton mode class
-     * @example $instances = [
-     *     'className1' => $instance1,
-     *     'className2' => $instance2,
-     *     ...
-     * ]
-     *
-     * @var array
+     * static instance
+     * @var static
      */
-    protected static $instances = [];
+    protected static $instance;
 
     /**
-     * return class instance, if $this->instances exist correspond
-     * class instance, direct return, otherwise new $className
+     * return class instance, if $this->instance exist class instance,
+     * direct return, otherwise new $className
      * store and return instance
      *
-     * @param  array  $params
      * @return static
      */
-    public static function getInstance($params = [])
+    public static function getInstance()
     {
-        $className = get_called_class();
-
-        if (isset(static::$instances[$className])) {
-            return static::$instances[$className];
+        if (static::$instance !== null) {
+            return static::$instance;
         }
 
-        static::$instances[$className] = new static($params);
-
-        return static::$instances[$className];
+        return static::$instance = new static();
     }
 
     protected function __construct() {}

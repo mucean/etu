@@ -19,7 +19,7 @@ abstract class Data
      */
     protected $values;
 
-    protected function pack(array $values)
+    public function pack(array $values)
     {
         $this->values = $values;
         return $this;
@@ -37,7 +37,7 @@ abstract class Data
     }
 
     /**
-     * @return \Etu\ORM\Mapper
+     * @return \Etu\ORM\Mapper | \Etu\ORM\Sql\Mapper
      */
     public static function getMapper()
     {
@@ -45,6 +45,9 @@ abstract class Data
             return static::$mapper;
         }
 
-        return static::$mapper = new static::$mapperName(static::$mapperOptions);
+        return static::$mapper = new static::$mapperName(
+            static::$mapperOptions,
+            static::class
+        );
     }
 }

@@ -35,6 +35,11 @@ class Sql extends Service
      */
     protected $quoteSymbol = '`';
 
+    protected $defaultOption = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+    ];
+
     public function __construct(array $config)
     {
         if (!array_key_exists('dsn', $config)) {
@@ -158,8 +163,10 @@ class Sql extends Service
         $dsn = $this->getConfig('dsn');
         $user = $this->getConfig('user');
         $password = $this->getConfig('password');
-        $options = $this->getConfig('options', []);
-        $options[PDO::ATTR_ERRMODE] = PDO::ERRMODE_EXCEPTION;
+        $options = $this->defaultOption;
+        foreach ($this->getConfig('options', []) as $key => $value) {
+            $options[$key] = $value;
+        }
 
         try {
             $db = new PDO($dsn, $user, $password, $options);

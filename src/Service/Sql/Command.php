@@ -121,6 +121,11 @@ abstract class Command
         $this->needToPrepare();
     }
 
+    public function __toString()
+    {
+        return $this->getPrepareSql();
+    }
+
     /**
      * get sql command for prepare
      * @return string

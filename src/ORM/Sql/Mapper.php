@@ -23,9 +23,17 @@ class Mapper extends BaseMapper
         'table' => ''
     ];
 
-    public function __construct(array $config, $className)
+    /**
+     * data attribute
+     * @var array
+     */
+    protected $attributes;
+
+    public function __construct($className)
     {
+        list($config, $attributes) = $className::getOptions();
         $this->config = array_merge($this->config, $config);
+        $this->attributes = $attributes;
         $this->className = $className;
     }
 
@@ -46,6 +54,10 @@ class Mapper extends BaseMapper
     {
     }
 
+    /**
+     * get sql command class, array of data entity will return when execute command
+     * @return Select
+     */
     public function select()
     {
         $select = new Select($this->getService(), $this->config['table']);
@@ -55,5 +67,9 @@ class Mapper extends BaseMapper
         });
 
         return $select;
+    }
+
+    public function normalizeAttribute(array $attributes)
+    {
     }
 }

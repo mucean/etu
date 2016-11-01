@@ -11,7 +11,7 @@ abstract class Data
 
     protected static $mapper;
 
-    protected $attribute = [];
+    protected static $attributes = [];
 
     /**
      *
@@ -37,6 +37,30 @@ abstract class Data
     }
 
     /**
+     * get entity mapper options and attribute
+     * @return array
+     */
+    public static function getOptions()
+    {
+        $mapperOptions = static::$mapperOptions;
+        $attributes = static::$attributes;
+
+        $calledClass = get_called_class();
+        if ($calledClass === __CLASS__) {
+            return [$mapperOptions, $attributes];
+        }
+
+        /** @var $parentClass static*/
+        $parentClass = get_parent_class($calledClass);
+        list($parentMapperOptions, $parentAttributes) = $parentClass::getOptions();
+
+        return [
+            array_merge($parentMapperOptions, $mapperOptions),
+            array_merge($parentAttributes, $attributes)
+        ];
+    }
+
+    /**
      * @return \Etu\ORM\Mapper | \Etu\ORM\Sql\Mapper
      */
     public static function getMapper()
@@ -45,9 +69,6 @@ abstract class Data
             return static::$mapper;
         }
 
-        return static::$mapper = new static::$mapperName(
-            static::$mapperOptions,
-            static::class
-        );
+        return static::$mapper = new static::$mapperName(static::class);
     }
 }

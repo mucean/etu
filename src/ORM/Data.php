@@ -9,16 +9,37 @@ abstract class Data
     protected static $mapperOptions = [
     ];
 
+    /**
+     * @var \Etu\ORM\Mapper | \Etu\ORM\Sql\Mapper
+     */
     protected static $mapper;
 
     protected static $attributes = [];
 
     /**
-     *
+     * values of modified attributes
+     * @var array
+     */
+    protected $modifiedAttributes = [];
+
+    /**
+     * values of restored attributes
+     * @var array
+     */
+    protected $restoredAttributes = [];
+
+    /**
+     * entity values
      * @var array
      */
     protected $values;
 
+    /**
+     * the method is for Mapper class to use
+     * @internal
+     * @param array $values
+     * @return $this
+     */
     public function pack(array $values)
     {
         $this->values = $values;
@@ -27,7 +48,6 @@ abstract class Data
 
     /**
      * @param mixed $primaryId
-     *
      * @return static
      */
     public static function find($primaryId)
@@ -61,6 +81,7 @@ abstract class Data
     }
 
     /**
+     * get data mapper
      * @return \Etu\ORM\Mapper | \Etu\ORM\Sql\Mapper
      */
     public static function getMapper()

@@ -62,7 +62,8 @@ class Mapper extends BaseMapper
     {
         $select = new Select($this->getService(), $this->config['table']);
         $select->setWrapper(function ($data) {
-            $entity = new $this->className;
+            /** @var $entity \Etu\ORM\Data */
+            $entity = new $this->className();
             return $entity->pack($data);
         });
 

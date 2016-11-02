@@ -15,7 +15,7 @@ class Mapper extends BaseMapper
 
     /**
      * the class name of entity
-     * @var string
+     * @var \Etu\ORM\Data
      */
     protected $className;
 

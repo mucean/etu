@@ -18,10 +18,15 @@ class Type
         }
 
         $this->container = $container;
+
+        $this->addDefaultType();
     }
 
     public function get($name)
     {
+        if ($name === null) {
+            $name = 'common';
+        }
         return $this->container->get($name);
     }
 
@@ -44,5 +49,18 @@ class Type
     public function __call($name, $arguments)
     {
         return call_user_func_array([$this->container, $name], $arguments);
+    }
+
+    protected function addDefaultType()
+    {
+        $this->add('common', function () {
+            return new Type\Common();
+        });
+        $this->add('integer', function () {
+            return new Type\Integer();
+        });
+        $this->add('string', function () {
+            return new Type\Text();
+        });
     }
 }

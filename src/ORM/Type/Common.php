@@ -13,4 +13,9 @@ class Common
     {
         return $value;
     }
+
+    public function normalizeAttribute(array $attribute)
+    {
+        return $attribute;
+    }
 }

@@ -23,12 +23,6 @@ abstract class Data
     protected $modifiedAttributes = [];
 
     /**
-     * values of restored attributes
-     * @var array
-     */
-    protected $restoredAttributes = [];
-
-    /**
      * entity values
      * @var array
      */
@@ -48,12 +42,11 @@ abstract class Data
 
     /**
      * @param mixed $primaryId
-     * @return static
+     * @return static | null
      */
     public static function find($primaryId)
     {
-        $data = static::getMapper()->find($primaryId);
-        return (new static())->pack($data);
+        return static::getMapper()->find($primaryId);
     }
 
     /**

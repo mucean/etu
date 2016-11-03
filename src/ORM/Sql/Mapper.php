@@ -51,26 +51,6 @@ class Mapper extends BaseMapper
     }
 
     /**
-     * @param $primaryId
-     * @return \Etu\ORM\Data | null
-     */
-    public function find($primaryId)
-    {
-        if (is_array($primaryId) === false) {
-            $primaryId = [$primaryId];
-        }
-
-        $select = $this->select();
-        foreach ($this->config['primaryKeys'] as $key => $primaryKey) {
-            $select->where(sprintf('%s = ?', $primaryKey), $primaryId[$key]);
-        }
-
-        $data = $select->get();
-
-        return count($data) === 0 ? null : $data[0];
-    }
-
-    /**
      * get sql command class, array of data entity will return when execute command
      * @return Select
      */
@@ -92,6 +72,9 @@ class Mapper extends BaseMapper
         return $select;
     }
 
+    /**
+     * init mapper class
+     */
     protected function init()
     {
         $className = $this->className;
@@ -108,12 +91,16 @@ class Mapper extends BaseMapper
         $this->attributes = $attributes;
     }
 
+    /**
+     * normalize data attribute
+     * @param array $attribute
+     */
     public function normalizeAttribute(array &$attribute)
     {
         $defaultAttribute = [
             'type' => null,
             'refuseUpdate' => false,
-            'allow_null' => false,
+            'allowNull' => false,
             'primaryKey' => false,
         ];
 
@@ -124,13 +111,37 @@ class Mapper extends BaseMapper
             Type::factory($type)->normalizeAttribute($attribute)
         );
 
-        if (array_key_exists('default', $attribute) === false && $attribute['allow_null']) {
+        if (array_key_exists('default', $attribute) === false && $attribute['allowNull']) {
             $attribute['default'] = null;
         }
 
         if ($attribute['primaryKey']) {
-            $attribute['allow_null'] = false;
+            $attribute['allowNull'] = false;
             $attribute['refuseUpdate'] = true;
         }
+    }
+
+    protected function doFind($primaryValues)
+    {
+        if (is_array($primaryValues) === false) {
+            $primaryValues = [$primaryValues];
+        }
+
+        if (count($primaryValues) !== count($this->config['primaryKeys'])) {
+            throw new \InvalidArgumentException(sprintf(
+                'there is %d primary key, %d primary value gave',
+                count($this->config['primaryKeys']),
+                count($primaryValues)
+            ));
+        }
+
+        $select = $this->select();
+        foreach ($this->config['primaryKeys'] as $key => $primaryKey) {
+            $select->where(sprintf('%s = ?', $primaryKey), $primaryValues[$key]);
+        }
+
+        $data = $select->get();
+
+        return count($data) === 0 ? null : $data[0];
     }
 }

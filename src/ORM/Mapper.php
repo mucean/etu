@@ -8,7 +8,16 @@ namespace Etu\ORM;
  */
 abstract class Mapper
 {
-    abstract public function find($primaryId);
-
     abstract public function getService();
+
+    abstract protected function doFind($primaryValues);
+
+    /**
+     * @param $primaryValues
+     * @return \Etu\ORM\Data | null
+     */
+    public function find($primaryValues)
+    {
+        return $this->doFind($primaryValues);
+    }
 }

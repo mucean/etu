@@ -46,7 +46,7 @@ class Mapper extends BaseMapper
             }
             /** @var $entity \Etu\ORM\Data */
             $entity = new $this->className();
-            return $entity->pack($data);
+            return $entity->__pack($data);
         });
 
         return $select;
@@ -88,7 +88,7 @@ class Mapper extends BaseMapper
     {
     }
 
-    protected function deDelete(Data $data, Service $service = null)
+    protected function doDelete(Data $data, Service $service = null)
     {
     }
 }

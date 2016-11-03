@@ -70,8 +70,13 @@ abstract class Data
         }
 
         $this->values[$name] = $value;
+        $this->modifiedAttributes[] = $name;
 
         return $this;
+    }
+
+    public function save()
+    {
     }
 
     /**
@@ -84,15 +89,39 @@ abstract class Data
     }
 
     /**
+     * entity is new created or not
+     * @return bool
+     */
+    public function isNew()
+    {
+        return $this->isNew;
+    }
+
+    /**
+     * entity is modified or not
+     * @return bool
+     */
+    public function isModified()
+    {
+        return !empty($this->modifiedAttributes);
+    }
+
+    /**
      * the method is for Mapper class to use
      * @internal
      * @param array $values
+     * @param bool $update
      * @return $this
      */
-    public function pack(array $values)
+    public function __pack(array $values, $update = false)
     {
+        if ($update) {
+            $values = array_merge($this->values, $values);
+        }
+
         $this->values = $values;
         $this->isNew = false;
+        $this->modifiedAttributes = [];
         return $this;
     }
 

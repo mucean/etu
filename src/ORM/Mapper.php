@@ -58,15 +58,82 @@ abstract class Mapper
 
     abstract protected function doInsert(Data $data, Service $service = null);
 
-    abstract protected function deDelete(Data $data, Service $service = null);
+    abstract protected function doDelete(Data $data, Service $service = null);
+
+    protected function __beforeUpdate() {}
+    protected function __afterUpdate() {}
+    protected function __beforeInsert() {}
+    protected function __afterInsert() {}
+    protected function __beforeDelete() {}
+    protected function __afterDelete() {}
+    protected function __beforeSave() {}
+    protected function __afterSave() {}
 
     /**
+     * according to primary key get the entity
      * @param $primaryValues
      * @return \Etu\ORM\Data | null
      */
     public function find($primaryValues)
     {
         return $this->doFind($primaryValues);
+    }
+
+    /**
+     * update entity date
+     * @param Data $data
+     * @param Service|null $service
+     */
+    public function update(Data $data, Service $service = null)
+    {
+        $this->__beforeUpdate();
+        $this->doUpdate($data, $service);
+        $data->__pack([], true);
+        $this->__afterUpdate();
+    }
+
+    /**
+     * create new entity
+     * @param Data $data
+     * @param Service|null $service
+     */
+    public function insert(Data $data, Service $service = null)
+    {
+        $this->__beforeInsert();
+
+        $ids = $this->doInsert($data, $service);
+
+        $data->__pack($ids, true);
+
+        $this->__afterInsert();
+    }
+
+    /**
+     * delete record from service
+     * @param Data $data
+     * @param Service|null $service
+     */
+    public function delete(Data $data, Service $service = null)
+    {
+        $this->__beforeDelete();
+        $this->doDelete($data, $service);
+        $this->__afterDelete();
+    }
+
+    /**
+     * insert or update record
+     * @param Data $data
+     * @param Service|null $service
+     */
+    public function save(Data $data, Service $service = null)
+    {
+        $this->__beforeSave();
+        if ($data->isNew()) {
+            $this->insert($data, $service);
+        } else {
+            $this->update($data, $service);
+        }
+        $this->__afterSave();
     }
 
     /**

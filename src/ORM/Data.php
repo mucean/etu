@@ -29,14 +29,48 @@ abstract class Data
     protected $values;
 
     /**
-     * the method is for Mapper class to use
-     * @internal
-     * @param array $values
+     * indicate this entity is new or not
+     * @var bool
+     */
+    protected $isNew = true;
+
+    /**
+     * fetch the value of the entity
+     * @param string $name
+     * @return mixed
+     */
+    public function get($name)
+    {
+        if (array_key_exists($name, static::$attributes) === false) {
+            throw new \InvalidArgumentException(sprintf('%s attribute does not exist', $name));
+        }
+
+        $value = $this->values[$name];
+        if (array_key_exists('get', static::$attributes)) {
+            $value = call_user_func(static::$attributes['get'], $value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * set the value of the entity defined
+     * @param $name
+     * @param $value
      * @return $this
      */
-    public function pack(array $values)
+    public function set($name, $value)
     {
-        $this->values = $values;
+        if (array_key_exists($name, static::$attributes) === false) {
+            throw new \InvalidArgumentException(sprintf('%s attribute does not exist', $name));
+        }
+
+        if (array_key_exists('set', static::$attributes)) {
+            $value = call_user_func(static::$attributes['set'], $value);
+        }
+
+        $this->values[$name] = $value;
+
         return $this;
     }
 
@@ -47,6 +81,19 @@ abstract class Data
     public static function find($primaryId)
     {
         return static::getMapper()->find($primaryId);
+    }
+
+    /**
+     * the method is for Mapper class to use
+     * @internal
+     * @param array $values
+     * @return $this
+     */
+    public function pack(array $values)
+    {
+        $this->values = $values;
+        $this->isNew = false;
+        return $this;
     }
 
     /**

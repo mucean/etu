@@ -2,17 +2,14 @@
 
 namespace Etu\ORM\Sql;
 
-use Etu\ORM\Mapper as BaseMapper;
-use Etu\ORM\Type;
-use Etu\ORM\Data;
+use Etu\ORM;
 use Etu\Service;
-use Etu\Service\Container;
 
-class Mapper extends BaseMapper
+class Mapper extends ORM\Mapper
 {
     protected $config = [
         'service' => '',
-        'table' => '',
+        'connection' => '',
         'primaryKeys' => []
     ];
 
@@ -22,7 +19,7 @@ class Mapper extends BaseMapper
      */
     protected function initService()
     {
-        return $this->service = Container::getInstance()->getService($this->config['service']);
+        return $this->service = Service\Container::getInstance()->getService($this->config['service']);
     }
 
     /**
@@ -36,13 +33,13 @@ class Mapper extends BaseMapper
             $service = $this->getService();
         }
 
-        $select = new Select($service, $this->config['table']);
+        $select = new Select($service, $this->getConnection());
         $select->setWrapper(function ($data) {
             foreach ($data as $key => $value) {
                 if (array_key_exists($key, $this->attributes) === false) {
                     continue;
                 }
-                $data[$key] = Type::factory($this->attributes[$key]['type'])->restore($value);
+                $data[$key] = ORM\Type::factory($this->attributes[$key]['type'])->restore($value);
             }
             /** @var $entity \Etu\ORM\Data */
             $entity = new $this->className();
@@ -50,6 +47,15 @@ class Mapper extends BaseMapper
         });
 
         return $select;
+    }
+
+    /**
+     * get connection of service
+     * @return string
+     */
+    public function getConnection()
+    {
+        return $this->config['connection'];
     }
 
     protected function doFind($primaryValues, Service $service = null)
@@ -80,15 +86,55 @@ class Mapper extends BaseMapper
         return count($data) === 0 ? null : $data[0];
     }
 
-    protected function doUpdate(Data $data, Service $service = null)
+    protected function doUpdate(ORM\Data $data, Service $service = null)
     {
+        if ($service === null) {
+            $service = $this->service;
+        }
+
+        $update = $service->update($this->getConnection());
+
+        foreach ($this->config['primaryKeys'] as $primaryKey) {
+            $update->where(sprintf('%s = ?', $primaryKey), $data->get($primaryKey));
+        }
+
+        foreach ($data->getModifiedAttributes() as $attribute) {
+            $update->set(
+                sprintf('%s = ?', $attribute),
+                ORM\Type::factory($this->getAttributeType($attribute))->restore($data->get($attribute))
+            );
+        }
+
+        return $update->execute();
     }
 
-    protected function doInsert(Data $data, Service $service = null)
+    protected function doInsert(ORM\Data $data, Service $service = null)
     {
+        if ($service === null) {
+            $service = $this->service;
+        }
+
+        $insert = $service->insert($this->getConnection());
     }
 
-    protected function doDelete(Data $data, Service $service = null)
+    protected function doDelete(ORM\Data $data, Service $service = null)
     {
+        if ($service === null) {
+            $service = $this->service;
+        }
+
+        $delete = $service->delete($this->getConnection());
+
+        foreach ($this->config['primaryKeys'] as $primaryKey) {
+            $delete->where(sprintf('%s = ?', $primaryKey), $data->get($primaryKey));
+        }
+
+        return $delete->execute();
+    }
+
+    protected function verify()
+    {
+        parent::verify();
+        $this->verifyConfig('connection');
     }
 }

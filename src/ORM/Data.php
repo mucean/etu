@@ -23,6 +23,12 @@ abstract class Data
     protected $modifiedAttributes = [];
 
     /**
+     * last values of modified attributes
+     * @var array
+     */
+    protected $lastModifiedAttributes = [];
+
+    /**
      * entity values
      * @var array
      */
@@ -41,11 +47,8 @@ abstract class Data
      */
     public function get($name)
     {
-        if (array_key_exists($name, static::$attributes) === false) {
-            throw new \InvalidArgumentException(sprintf('%s attribute does not exist', $name));
-        }
+        $value = $this->getValue(static::$attributes, $name);
 
-        $value = $this->values[$name];
         if (array_key_exists('get', static::$attributes)) {
             $value = call_user_func(static::$attributes['get'], $value);
         }
@@ -75,8 +78,13 @@ abstract class Data
         return $this;
     }
 
+    /**
+     * save date
+     * @return bool
+     */
     public function save()
     {
+        return static::$mapper->save($this);
     }
 
     /**
@@ -104,6 +112,49 @@ abstract class Data
     public function isModified()
     {
         return !empty($this->modifiedAttributes);
+    }
+
+    /**
+     * get modified attributes
+     * @param string $name
+     * @return array|mixed
+     */
+    public function getModifiedAttributes($name = null)
+    {
+        if ($name === null) {
+            return $this->modifiedAttributes;
+        }
+
+        return $this->getValue($this->modifiedAttributes, $name);
+    }
+
+    /**
+     * get last modified attributes
+     * @param null $name
+     * @return array|mixed
+     */
+    public function getLastModifiedAttributes($name = null)
+    {
+        if ($name === null) {
+            return $this->lastModifiedAttributes;
+        }
+
+        return $this->getValue($this->lastModifiedAttributes, $name);
+    }
+
+    /**
+     * get value in the array via key name
+     * @param array $attributes
+     * @param $name
+     * @return mixed
+     */
+    protected function getValue(array &$attributes, $name)
+    {
+        if (array_key_exists($name, $attributes) === false) {
+            throw new \InvalidArgumentException(sprintf('%s attribute does not exist', $name));
+        }
+
+        return $attributes[$name];
     }
 
     /**

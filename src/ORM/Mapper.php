@@ -83,6 +83,7 @@ abstract class Mapper
      * update entity date
      * @param Data $data
      * @param Service|null $service
+     * @return bool
      */
     public function update(Data $data, Service $service = null)
     {
@@ -90,12 +91,14 @@ abstract class Mapper
         $this->doUpdate($data, $service);
         $data->__pack([], true);
         $this->__afterUpdate();
+        return true;
     }
 
     /**
      * create new entity
      * @param Data $data
      * @param Service|null $service
+     * @return bool
      */
     public function insert(Data $data, Service $service = null)
     {
@@ -106,24 +109,29 @@ abstract class Mapper
         $data->__pack($ids, true);
 
         $this->__afterInsert();
+
+        return true;
     }
 
     /**
      * delete record from service
      * @param Data $data
      * @param Service|null $service
+     * @return bool
      */
     public function delete(Data $data, Service $service = null)
     {
         $this->__beforeDelete();
         $this->doDelete($data, $service);
         $this->__afterDelete();
+        return true;
     }
 
     /**
      * insert or update record
      * @param Data $data
      * @param Service|null $service
+     * @return bool
      */
     public function save(Data $data, Service $service = null)
     {
@@ -134,6 +142,8 @@ abstract class Mapper
             $this->update($data, $service);
         }
         $this->__afterSave();
+
+        return true;
     }
 
     /**
@@ -144,6 +154,7 @@ abstract class Mapper
         $className = $this->className;
         list($config, $attributes) = $className::getOptions();
         $this->config = array_merge($this->config, $config);
+        $this->verify();
 
         foreach ($attributes as $key => &$attribute) {
             $this->normalizeAttribute($attribute);
@@ -155,11 +166,18 @@ abstract class Mapper
         $this->attributes = $attributes;
     }
 
+    protected function getAttributeType($name)
+    {
+        return array_key_exists($name, $this->attributes[$name])
+            ? $this->attributes['type']
+            : null;
+    }
+
     /**
      * normalize data attribute
      * @param array $attribute
      */
-    public function normalizeAttribute(array &$attribute)
+    protected function normalizeAttribute(array &$attribute)
     {
         $defaultAttribute = [
             'type' => null,
@@ -182,6 +200,25 @@ abstract class Mapper
         if ($attribute['primaryKey']) {
             $attribute['allowNull'] = false;
             $attribute['refuseUpdate'] = true;
+        }
+    }
+
+    protected function verify()
+    {
+        $this->verifyConfig('service');
+    }
+
+    /**
+     * verify the config attribute if it is true
+     * @param string $name
+     * @throws Exception\ParameterNotRight
+     */
+    protected function verifyConfig($name)
+    {
+        if (array_key_exists($name, $this->config) === false || empty($this->config[$name])) {
+            throw new Exception\ParameterNotRight(
+                sprintf('%s config does not set or empty', $name)
+            );
         }
     }
 }

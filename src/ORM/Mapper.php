@@ -11,7 +11,7 @@ use Etu\Service;
 abstract class Mapper
 {
     /**
-     * @var \Etu\Service\Sql
+     * @var \Etu\Service\Sql | \Etu\Service\Sql\Mysql
      */
     protected $service;
 
@@ -60,15 +60,6 @@ abstract class Mapper
 
     abstract protected function doDelete(Data $data, Service $service = null);
 
-    protected function __beforeUpdate() {}
-    protected function __afterUpdate() {}
-    protected function __beforeInsert() {}
-    protected function __afterInsert() {}
-    protected function __beforeDelete() {}
-    protected function __afterDelete() {}
-    protected function __beforeSave() {}
-    protected function __afterSave() {}
-
     /**
      * according to primary key get the entity
      * @param $primaryValues
@@ -87,10 +78,8 @@ abstract class Mapper
      */
     public function update(Data $data, Service $service = null)
     {
-        $this->__beforeUpdate();
         $this->doUpdate($data, $service);
         $data->__pack([], true);
-        $this->__afterUpdate();
         return true;
     }
 
@@ -102,13 +91,18 @@ abstract class Mapper
      */
     public function insert(Data $data, Service $service = null)
     {
-        $this->__beforeInsert();
+        if ($this->doInsert($data, $service) === false) {
+            return false;
+        }
 
-        $ids = $this->doInsert($data, $service);
-
+        $ids = [];
+        if (count($this->config['primaryKeys']) === 1) {
+            $primaryKey = $this->config['primaryKeys'][0];
+            if (isset($this->attributes[$primaryKey]['autoIncrement'])) {
+                $ids[$primaryKey] = Type::factory($this->getAttributeType($primaryKey))->restore($this->service->lastInsertId());
+            }
+        }
         $data->__pack($ids, true);
-
-        $this->__afterInsert();
 
         return true;
     }
@@ -121,9 +115,7 @@ abstract class Mapper
      */
     public function delete(Data $data, Service $service = null)
     {
-        $this->__beforeDelete();
         $this->doDelete($data, $service);
-        $this->__afterDelete();
         return true;
     }
 
@@ -135,13 +127,11 @@ abstract class Mapper
      */
     public function save(Data $data, Service $service = null)
     {
-        $this->__beforeSave();
         if ($data->isNew()) {
             $this->insert($data, $service);
         } else {
             $this->update($data, $service);
         }
-        $this->__afterSave();
 
         return true;
     }
@@ -166,7 +156,7 @@ abstract class Mapper
         $this->attributes = $attributes;
     }
 
-    protected function getAttributeType($name)
+    public function getAttributeType($name)
     {
         return array_key_exists($name, $this->attributes[$name])
             ? $this->attributes['type']

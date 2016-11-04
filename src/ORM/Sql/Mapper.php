@@ -89,7 +89,7 @@ class Mapper extends ORM\Mapper
     protected function doUpdate(ORM\Data $data, Service $service = null)
     {
         if ($service === null) {
-            $service = $this->service;
+            $service = $this->getService();
         }
 
         $update = $service->update($this->getConnection());
@@ -111,16 +111,27 @@ class Mapper extends ORM\Mapper
     protected function doInsert(ORM\Data $data, Service $service = null)
     {
         if ($service === null) {
-            $service = $this->service;
+            $service = $this->getService();
         }
 
         $insert = $service->insert($this->getConnection());
+
+        $values = $data->pick();
+
+        $insert->setColumns(array_keys($values))
+            ->setValues(array_values($values));
+
+        if ($insert->execute()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     protected function doDelete(ORM\Data $data, Service $service = null)
     {
         if ($service === null) {
-            $service = $this->service;
+            $service = $this->getService();
         }
 
         $delete = $service->delete($this->getConnection());

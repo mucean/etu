@@ -44,13 +44,26 @@ abstract class Data
      * fetch the value of the entity
      * @param string $name
      * @return mixed
+     * @throws \InvalidArgumentException
      */
     public function get($name)
     {
-        $value = $this->getValue(static::$attributes, $name);
+        if (array_key_exists($name, $this->values)) {
+            $value = $this->values[$name];
+        } else {
+            if (array_key_exists($name, static::$attributes) === false) {
+                throw new \InvalidArgumentException(sprintf('%s attribute does not exist', $name));
+            }
 
-        if (array_key_exists('get', static::$attributes)) {
-            $value = call_user_func(static::$attributes['get'], $value);
+            if (array_key_exists('default', static::$attributes[$name]) === false) {
+                throw new \InvalidArgumentException(sprintf('%s attribute does not default value'));
+            }
+
+            $value = static::$attributes[$name]['default'];
+        }
+
+        if (isset(static::$attributes[$name]['get'])) {
+            $value = call_user_func(static::$attributes[$name]['get'], $value);
         }
 
         return $value;
@@ -61,6 +74,7 @@ abstract class Data
      * @param $name
      * @param $value
      * @return $this
+     * @throws \InvalidArgumentException
      */
     public function set($name, $value)
     {
@@ -68,8 +82,8 @@ abstract class Data
             throw new \InvalidArgumentException(sprintf('%s attribute does not exist', $name));
         }
 
-        if (array_key_exists('set', static::$attributes)) {
-            $value = call_user_func(static::$attributes['set'], $value);
+        if (isset(static::$attributes[$name]['set'])) {
+            $value = call_user_func(static::$attributes[$name]['set'], $value);
         }
 
         $this->values[$name] = $value;
@@ -84,7 +98,36 @@ abstract class Data
      */
     public function save()
     {
-        return static::$mapper->save($this);
+        $result = true;
+
+        if ($this->isNew()) {
+            $this->__beforeSave();
+            $this->__beforeInsert();
+            $result = static::getMapper()->insert($this);
+            $this->__afterInsert();
+            $this->__afterSave();
+        } elseif ($this->isModified()) {
+            $this->__beforeSave();
+            $this->__beforeUpdate();
+            $result = static::getMapper()->update($this);
+            $this->__afterUpdate();
+            $this->__afterSave();
+        }
+
+        return $result;
+    }
+
+    /**
+     * delete entity from service
+     * @return bool
+     */
+    public function delete()
+    {
+        $this->__beforeDelete();
+        $result = static::getMapper()->delete($this);
+        $this->__afterDelete();
+
+        return $result;
     }
 
     /**
@@ -107,55 +150,58 @@ abstract class Data
 
     /**
      * entity is modified or not
+     * @param string $name
      * @return bool
      */
-    public function isModified()
+    public function isModified($name = null)
     {
-        return !empty($this->modifiedAttributes);
+        if ($name === null) {
+            return !empty($this->modifiedAttributes);
+        }
+
+        return in_array($name, $this->modifiedAttributes);
+    }
+
+    /**
+     * entity last is modified or not
+     * @param string $name
+     * @return bool
+     */
+    public function isLastModified($name = null)
+    {
+        if ($name === null) {
+            return !empty($this->lastModifiedAttributes);
+        }
+
+        return in_array($name, $this->lastModifiedAttributes);
     }
 
     /**
      * get modified attributes
-     * @param string $name
-     * @return array|mixed
+     * @return array
      */
-    public function getModifiedAttributes($name = null)
+    public function getModifiedAttributes()
     {
-        if ($name === null) {
-            return $this->modifiedAttributes;
-        }
-
-        return $this->getValue($this->modifiedAttributes, $name);
+        return $this->modifiedAttributes;
     }
 
     /**
      * get last modified attributes
-     * @param null $name
-     * @return array|mixed
+     * @return array
      */
-    public function getLastModifiedAttributes($name = null)
+    public function getLastModifiedAttributes()
     {
-        if ($name === null) {
-            return $this->lastModifiedAttributes;
-        }
-
-        return $this->getValue($this->lastModifiedAttributes, $name);
+        return $this->lastModifiedAttributes;
     }
 
-    /**
-     * get value in the array via key name
-     * @param array $attributes
-     * @param $name
-     * @return mixed
-     */
-    protected function getValue(array &$attributes, $name)
-    {
-        if (array_key_exists($name, $attributes) === false) {
-            throw new \InvalidArgumentException(sprintf('%s attribute does not exist', $name));
-        }
-
-        return $attributes[$name];
-    }
+    protected function __beforeUpdate() {}
+    protected function __afterUpdate() {}
+    protected function __beforeInsert() {}
+    protected function __afterInsert() {}
+    protected function __beforeDelete() {}
+    protected function __afterDelete() {}
+    protected function __beforeSave() {}
+    protected function __afterSave() {}
 
     /**
      * the method is for Mapper class to use
@@ -172,8 +218,25 @@ abstract class Data
 
         $this->values = $values;
         $this->isNew = false;
+        $this->lastModifiedAttributes = $this->modifiedAttributes;
         $this->modifiedAttributes = [];
         return $this;
+    }
+
+    public function pick(array $attributes = [])
+    {
+        if (count($attributes) === 0) {
+            $attributes = array_keys(static::$attributes);
+        }
+
+        $values = [];
+        foreach ($this->values as $key => $value) {
+            if (in_array($key, $attributes)) {
+                $values[$key] = Type::factory(static::$mapper->getAttributeType($key))->store($value);
+            }
+        }
+
+        return $values;
     }
 
     /**

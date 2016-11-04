@@ -7,6 +7,8 @@ abstract class Data
     protected static $mapperName = '\Etu\ORM\Mapper';
 
     protected static $mapperOptions = [
+        'service' => '',
+        'connection' => ''
     ];
 
     /**
@@ -14,6 +16,22 @@ abstract class Data
      */
     protected static $mapper;
 
+    /**
+     * @example
+     * [
+     *     'id' => [
+     *         'type' => 'integer',             // enum: integer, string, number, json, time
+     *         'primaryKey' => true,
+     *         'default' => 0,
+     *         'autoIncrement' => true,
+     *         'allowNull' => true,
+     *         'set' => function ($value) {return $value},
+     *         'get' => function ($value) {return $value}
+     *     ],
+     *     ...
+     * ]
+     * @var array
+     */
     protected static $attributes = [];
 
     /**
@@ -225,14 +243,20 @@ abstract class Data
 
     public function pick(array $attributes = [])
     {
-        if (count($attributes) === 0) {
-            $attributes = array_keys(static::$attributes);
-        }
-
         $values = [];
-        foreach ($this->values as $key => $value) {
-            if (in_array($key, $attributes)) {
-                $values[$key] = Type::factory(static::$mapper->getAttributeType($key))->store($value);
+        if (count($attributes) > 0) {
+            foreach ($attributes as $name) {
+                if (array_key_exists($name, static::$attributes) === false || array_key_exists($name, $this->values) === false) {
+                    continue;
+                }
+                $values[$name] = Type::factory(static::$mapper->getAttributeType($name))
+                    ->store($this->values[$name]);
+            }
+        } else {
+            foreach ($this->values as $key => $value) {
+                if (array_key_exists($key, static::$attributes)) {
+                    $values[$key] = Type::factory(static::$mapper->getAttributeType($key))->store($value);
+                }
             }
         }
 

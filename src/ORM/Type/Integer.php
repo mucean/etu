@@ -8,4 +8,9 @@ class Integer extends Common
     {
         return intval($value);
     }
+
+    public function store($value)
+    {
+        return intval($value);
+    }
 }

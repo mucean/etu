@@ -62,5 +62,11 @@ class Type
         $this->add('string', function () {
             return new Type\Text();
         });
+        $this->add('number', function () {
+            return new Type\Number();
+        });
+        $this->add('json', function () {
+            return new Type\Json();
+        });
     }
 }

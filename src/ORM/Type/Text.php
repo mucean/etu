@@ -8,4 +8,9 @@ class Text extends Common
     {
         return strval($value);
     }
+
+    public function store($value)
+    {
+        return strval($value);
+    }
 }

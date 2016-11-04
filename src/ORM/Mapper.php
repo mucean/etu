@@ -98,7 +98,7 @@ abstract class Mapper
         $ids = [];
         if (count($this->config['primaryKeys']) === 1) {
             $primaryKey = $this->config['primaryKeys'][0];
-            if (isset($this->attributes[$primaryKey]['autoIncrement']) && count($data->pick([$primaryKey])) === 0) {
+            if (isset($this->attributes[$primaryKey]['autoIncrement']) && $data->isModified($primaryKey) === false) {
                 $ids[$primaryKey] = Type::factory($this->getAttributeType($primaryKey))
                     ->restore($this->service->lastInsertId());
             }

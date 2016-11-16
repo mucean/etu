@@ -9,8 +9,14 @@ abstract class Message implements MessageInterface
 {
     protected $protocol = '1.1';
 
+    /**
+     * @var Headers
+     */
     protected $headers;
 
+    /**
+     * @var StreamInterface
+     */
     protected $body;
 
     public function getProtocolVersion()

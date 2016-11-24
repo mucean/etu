@@ -28,7 +28,16 @@ trait Singleton
             return static::$instance;
         }
 
-        return static::$instance = new static();
+        $args = func_get_args();
+
+        if ($args === []) {
+            static::$instance = new static();
+        } else {
+            $ref = new \ReflectionClass(get_called_class());
+            static::$instance = $ref->newInstanceArgs($args);
+        }
+
+        return static::$instance;
     }
 
     protected function __construct() {}

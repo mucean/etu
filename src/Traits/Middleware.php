@@ -61,13 +61,13 @@ trait Middleware
 
         array_unshift(
             $this->middleware,
-            $this->getBeAddedMiddleware($middleware, $next)
+            $this->getAddedMiddleware($middleware, $next)
         );
 
         return $this;
     }
 
-    protected function getBeAddedMiddleware(callable $middleware, callable $next)
+    protected function getAddedMiddleware(callable $middleware, callable $next)
     {
         return function () use ($middleware, $next) {
             $params = func_get_args();

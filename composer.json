@@ -1,11 +1,13 @@
 {
     "name": "mucean/etu",
     "description": "a php RESTfull framework",
-    "home": "https://github.com/mucean/etu",
+    "keywords": ["restfull", "framework"],
+    "homepage": "https://github.com/mucean/etu",
     "license": "MIT",
     "authors": [
         {
             "name": "LiuHaiFeng",
+            "homepage": "https://github.com/mucean",
             "email": "mocean.liu@gmail.com"
         }
     ],
@@ -17,5 +19,6 @@
     "autoload": {
         "psr-4": {"Etu\\": "src"},
         "files": ["src/functions.php"]
-    }
+    },
+    "minimum-stability": "stable"
 }

@@ -3,3 +3,4 @@ tags.vendors
 src/tags
 vendor/
 .idea/
+composer.lock

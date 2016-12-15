@@ -14,6 +14,10 @@ class Application
 {
     use Middleware;
 
+    /**
+     * Container
+     * @var Container
+     */
     protected $container;
 
     protected $defaultSetting = [
@@ -37,6 +41,15 @@ class Application
         }
 
         $this->container = $container;
+    }
+
+    /**
+     * enable to custom container
+     * @return Container
+     */
+    public function getContainer()
+    {
+        return $this->container;
     }
 
     /**

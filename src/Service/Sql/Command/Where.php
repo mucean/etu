@@ -2,8 +2,6 @@
 
 namespace Etu\Service\Sql\Command;
 
-use Etu\Service;
-
 /**
  * Trait Where
  * @author mucean

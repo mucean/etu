@@ -87,7 +87,7 @@ class Stream implements StreamInterface
     public function detach()
     {
         if (!$this->isAttached()) {
-            return;
+            return null;
         }
 
         $stream = $this->stream;
@@ -104,7 +104,7 @@ class Stream implements StreamInterface
         }
 
         if (!$this->isAttached()) {
-            return;
+            return null;
         }
 
         $stats = fstat($this->stream);

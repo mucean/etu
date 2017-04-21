@@ -5,6 +5,9 @@ use Etu\Stream;
 
 class StreamTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * @var Stream
+     */
     protected $stream;
     protected $str = 'Hello, world!';
 
@@ -22,12 +25,12 @@ class StreamTest extends \PHPUnit_Framework_TestCase
     /**
      * @after
      */
-    public function destoryStream()
+    public function destroyStream()
     {
         $this->stream->close();
     }
 
-    public function testThowExceptionConstruct()
+    public function testThrowExceptionConstruct()
     {
         $this->setExpectedException('\\InvalidArgumentException', 'argument passed to Stream class must be a resource');
         new Stream('test');

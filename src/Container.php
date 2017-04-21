@@ -2,11 +2,12 @@
 
 namespace Etu;
 
+use Etu\Interfaces\ContainerInterface;
 use Etu\Traits\ArrayPropertyAllAccess;
 use Closure;
 use InvalidArgumentException;
 
-class Container
+class Container implements ContainerInterface
 {
     use ArrayPropertyAllAccess;
 
@@ -60,7 +61,7 @@ class Container
 
         if (is_callable($value) && !$this->hasProperty('calls', $id)) {
             $call = $value;
-            $value = call_user_func_array($value, $arguments);
+            $value = call_user_func_array($value, array_unshift($arguments, $this));
             if (!$this->hasProperty('maintain', $id)) {
                 $this->setProperty('calls', $id, $call);
                 $this->setProperty('container', $id, $value);
@@ -75,7 +76,7 @@ class Container
         return $this->hasProperty('container', $id);
     }
 
-    public function add($id, $value, $bindThis = true)
+    public function add($id, $value, $bindThis = false)
     {
         if ($this->has($id)) {
             $this->remove($id);

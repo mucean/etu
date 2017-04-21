@@ -1,6 +1,7 @@
 <?php
 namespace Etu;
 
+use Etu\Interfaces\ContainerInterface;
 use Etu\Traits\EtuMiddleware as Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,7 +17,7 @@ class Application
 
     /**
      * Container
-     * @var Container
+     * @var ContainerInterface
      */
     protected $container;
 
@@ -36,8 +37,8 @@ class Application
             DefaultServices::register($container);
         }
 
-        if (!($container instanceof Container)) {
-            throw new InvalidArgumentException('A container expected');
+        if (!($container instanceof ContainerInterface)) {
+            throw new InvalidArgumentException('A class instance expected implement ContainerInterface');
         }
 
         $this->container = $container;

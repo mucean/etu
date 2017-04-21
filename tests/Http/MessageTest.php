@@ -1,12 +1,16 @@
 <?php
 namespace Tests\Http;
 
+use Etu\Http\Message;
 use Etu\Stream;
 
-class MessageTest extends \PHPUnit_Framework_TestCase
+class MessageTest extends \PHPUnit\Framework\TestCase
 {
     protected $context;
 
+    /**
+     * @var Message
+     */
     protected $message;
 
     /**
@@ -31,10 +35,7 @@ class MessageTest extends \PHPUnit_Framework_TestCase
         $newMessage = $message->withProtocolVersion($protocol);
         $this->assertEquals($newMessage->getProtocolVersion(), $protocol);
         $wrongProtocol = '5.5';
-        $this->setExpectedException(
-            'InvalidArgumentException',
-            'protocol must be one of them, 1.1, 1.0, 2.0'
-        );
+        $this->expectExceptionMessage('protocol must be one of them, 1.1, 1.0, 2.0');
         $message->withProtocolVersion($wrongProtocol);
     }
 
@@ -82,8 +83,7 @@ class MessageTest extends \PHPUnit_Framework_TestCase
     public function testWithHeaderValueException()
     {
         $message = $this->message;
-        $this->setExpectedException(
-            'InvalidArgumentException',
+        $this->expectExceptionMessage(
             'header value must be an type can be convert to string or an array contains string value'
         );
         $message->withHeader('hi', $this);
@@ -92,10 +92,7 @@ class MessageTest extends \PHPUnit_Framework_TestCase
     public function testWithHeaderOtherValueException()
     {
         $message = $this->message;
-        $this->setExpectedException(
-            'InvalidArgumentException',
-            'header array value must only contains an type can be convert to string'
-        );
+        $this->expectExceptionMessage('header array value must only contains an type can be convert to string');
         $message->withHeader('hi', ['hello', $this]);
     }
 

@@ -1,42 +1,58 @@
 <?php
 
-namespace Tests\Service;
+namespace Tests\Service\Sql;
 
-use Etu\Service\Sql;
+use Etu\Service\Sql\Mysql;
 
 /**
- * Class SqlTest
- * @author mucean <mocean.liu@gmail.com>
+ * Class MysqlTest
+ * @author mucean
  */
-class SqlTest extends \PHPUnit\Framework\TestCase
+class MysqlTest extends \PHPUnit\Framework\TestCase
 {
+    /**
+     * @var Mysql
+     */
     protected $db;
 
-    public function __construct()
+    /**
+     * @before
+     */
+    public function getConfig()
     {
-        $config = require __DIR__ . '/Sql/config.php';
+        $config = require __DIR__ . '/config.php';
         if (isset($config['mysql']) === false) {
             throw new \RuntimeException('mysql config is not fount!');
         }
 
         $mysqlConfig = $config['mysql'];
-
+ 
         $dns = sprintf('mysql:host=%s;dbname=%s', $mysqlConfig['host'], $mysqlConfig['dbName']);
-        $this->db = new Sql([
+
+        $this->db = new Mysql([
             'dsn' => $dns,
             'user' => $mysqlConfig['user'],
             'password' => $mysqlConfig['password']
         ]);
-        parent::__construct();
+    }
+
+    public function close()
+    {
+        $this->db->close();
     }
 
     public function testConstruct()
     {
-        $this->assertInstanceOf(Sql::class, $this->db);
+        $this->assertInstanceOf(Mysql::class, $this->db);
     }
 
     public function testConnect()
     {
         $this->assertInstanceOf(\PDO::class, $this->db->connect());
+    }
+
+    public function testGetPDO()
+    {
+        $this->assertInstanceOf(\PDO::class, $this->db->getPDO());
     }
 }

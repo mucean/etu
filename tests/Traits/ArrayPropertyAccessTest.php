@@ -3,7 +3,7 @@ namespace tests\Traits;
 
 use Etu\Traits\ArrayPropertyAllAccess;
 
-class ArrayPropertyAccessTest extends \PHPUnit_Framework_TestCase
+class ArrayPropertyAccessTest extends \PHPUnit\Framework\TestCase
 {
     use ArrayPropertyAllAccess;
 
@@ -15,19 +15,20 @@ class ArrayPropertyAccessTest extends \PHPUnit_Framework_TestCase
     {
         $this->registerPropertyAccess('readArray');
         $this->registerPropertyAccess('writeArray', true);
+        parent::__construct();
     }
 
     public function testRegisterPropertyAccess()
     {
         $this->assertEquals($this->accessProperties['readArray'], false);
         $this->assertEquals($this->accessProperties['writeArray'], true);
-        $this->setExpectedException('InvalidArgumentException', 'the property must be existed and an array type');
+        $this->expectExceptionMessage('the property must be existed and an array type');
         $this->registerPropertyAccess('error');
     }
 
     public function testRegisterPropertyAccessException()
     {
-        $this->setExpectedException('InvalidArgumentException', 'the property must be existed and an array type');
+        $this->expectExceptionMessage('the property must be existed and an array type');
         $this->registerPropertyAccess('notArray');
     }
 
@@ -58,7 +59,7 @@ class ArrayPropertyAccessTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($this->getProperty('writeArray', $accessPath), 'bbb');
         $this->setProperty('writeArray', $accessPath, 'ddd');
         $this->assertEquals($this->getProperty('writeArray', $accessPath), 'ddd');
-        $this->setExpectedException('InvalidArgumentException', 'hello is not register to access');
+        $this->expectExceptionMessage('hello is not register to access');
         $this->setProperty('hello', ['aaa'], 'abc');
     }
 
@@ -68,7 +69,7 @@ class ArrayPropertyAccessTest extends \PHPUnit_Framework_TestCase
         $this->unsetProperty('writeArray', ['abc', 'dfg']);
         unset($writeArray['abc']['dfg']);
         $this->assertEquals($this->getProperty('writeArray', []), $writeArray);
-        $this->setExpectedException('RuntimeException', 'readArray property is not allow to modify');
-        $this->unsetProperty('readArray', ['aaa'], 'abc');
+        $this->expectExceptionMessage('readArray property is not allow to modify');
+        $this->unsetProperty('readArray', ['aaa']);
     }
 }

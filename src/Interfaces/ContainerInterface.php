@@ -1,4 +1,5 @@
 <?php
+
 namespace Etu\Interfaces;
 
 interface ContainerInterface

@@ -10,7 +10,7 @@ use Etu\Container;
 /**
  * Class MiddlewareTest
  */
-class MiddlewareTest extends \PHPUnit_Framework_TestCase
+class MiddlewareTest extends \PHPUnit\Framework\TestCase
 {
     use Middleware;
 

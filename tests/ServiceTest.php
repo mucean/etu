@@ -4,7 +4,7 @@ namespace Tests;
 
 use Tests\Instance\ServiceInstance;
 
-class ServiceTest extends \PHPUnit_Framework_TestCase
+class ServiceTest extends \PHPUnit\Framework\TestCase
 {
     protected $item;
 
@@ -15,6 +15,7 @@ class ServiceTest extends \PHPUnit_Framework_TestCase
     public function __construct()
     {
         $this->item = new ServiceInstance($this->config);
+        parent::__construct();
     }
 
     public function testGetConfig()

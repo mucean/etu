@@ -3,7 +3,7 @@ namespace Tests\Http;
 
 use Etu\Stream;
 
-class StreamTest extends \PHPUnit_Framework_TestCase
+class StreamTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var Stream
@@ -32,7 +32,7 @@ class StreamTest extends \PHPUnit_Framework_TestCase
 
     public function testThrowExceptionConstruct()
     {
-        $this->setExpectedException('\\InvalidArgumentException', 'argument passed to Stream class must be a resource');
+        $this->expectExceptionMessage('argument passed to Stream class must be a resource');
         new Stream('test');
     }
 
@@ -63,7 +63,7 @@ class StreamTest extends \PHPUnit_Framework_TestCase
         $this->stream->rewind();
         $this->assertEquals($this->stream->tell(), 0);
         $this->stream->close();
-        $this->setExpectedException('RuntimeException', 'source has been detached');
+        $this->expectExceptionMessage('source has been detached');
         $this->stream->tell();
     }
 
@@ -87,10 +87,10 @@ class StreamTest extends \PHPUnit_Framework_TestCase
     {
         $this->stream->seek(strlen($this->str) - 5);
         $this->assertEquals($this->stream->tell(), strlen($this->str) - 5);
-        $this->setExpectedException('RuntimeException', 'Unable to seek to the position of source');
+        $this->expectExceptionMessage('Unable to seek to the position of source');
         $this->stream->seek(strlen($this->str) + 1);
         $this->stream->close();
-        $this->setExpectedException('RuntimeException', 'source can not be seeked');
+        $this->expectExceptionMessage('source can not be seeked');
         $this->stream->seek(0);
     }
 
@@ -106,7 +106,7 @@ class StreamTest extends \PHPUnit_Framework_TestCase
         $content = 'good job';
         $this->assertEquals($this->stream->write($content), strlen($content));
         $this->stream->close();
-        $this->setExpectedException('RuntimeException', 'source is not writeable');
+        $this->expectExceptionMessage('source is not writeable');
         $this->stream->write($content);
     }
 
@@ -121,7 +121,7 @@ class StreamTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals($this->stream->read(5), substr($this->str, 0, 5));
         $this->stream->close();
-        $this->setExpectedException('RuntimeException', 'source is not readable');
+        $this->expectExceptionMessage('source is not readable');
         $this->stream->read(5);
     }
 
@@ -129,7 +129,7 @@ class StreamTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals($this->stream->getContents(), $this->str);
         $this->stream->close();
-        $this->setExpectedException('RuntimeException', 'Could not get contents from stream');
+        $this->expectExceptionMessage('Could not get contents from stream');
         $this->stream->getContents();
     }
 
@@ -149,5 +149,6 @@ class StreamTest extends \PHPUnit_Framework_TestCase
     public function testClose()
     {
         $this->stream->close();
+        $this->assertEquals(null, $this->stream->detach());
     }
 }

@@ -3,7 +3,7 @@ namespace Tests\Http;
 
 use \Etu\Http\Uri;
 
-class UriTest extends \PHPUnit_Framework_TestCase
+class UriTest extends \PHPUnit\Framework\TestCase
 {
     protected $uri;
     public function __construct()
@@ -11,6 +11,7 @@ class UriTest extends \PHPUnit_Framework_TestCase
         $url = 'http://mucean:friend@www.google.com/test/api?userId=12345#tt';
         /* @var $uri \Etu\Http\Uri */
         $this->uri = Uri::buildFromUrl($url);
+        parent::__construct();
     }
 
     public function testAllGet()
@@ -33,7 +34,7 @@ class UriTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('Etu\Http\Uri', $new_uri);
         $this->assertEquals($new_uri->getScheme(), 'https');
         $this->assertEquals($new_uri->getPort(), null);
-        $this->setExpectedException('InvalidArgumentException', 'scheme of Uri must be a valid value');
+        $this->expectExceptionMessage('scheme of Uri must be a valid value');
         $this->uri->withScheme('ftp');
     }
 
@@ -62,9 +63,9 @@ class UriTest extends \PHPUnit_Framework_TestCase
         $new_uri = $this->uri->withPort(8080);
         $this->assertInstanceOf('Etu\Http\Uri', $new_uri);
         $this->assertEquals($new_uri->getPort(), 8080);
-        $this->setExpectedException('InvalidArgumentException', 'Valid Port is between 1 and 65535, 65536 given');
+        $this->expectExceptionMessage('Valid Port is between 1 and 65535, 65536 given');
         $this->uri->withPort(65536);
-        $this->setExpectedException('InvalidArgumentException', 'Valid Port is between 1 and 65535, -1 given');
+        $this->expectExceptionMessage('Valid Port is between 1 and 65535, -1 given');
         $this->uri->withPort(-1);
     }
 
@@ -73,9 +74,9 @@ class UriTest extends \PHPUnit_Framework_TestCase
         $new_uri = $this->uri->withPath('/test/api');
         $this->assertNotSame($this->uri, $new_uri);
 
-        $this->setExpectedException('InvalidArgumentException', 'path argument must be a string');
+        $this->expectExceptionMessage('path argument must be a string');
         $this->uri->withPath(12345);
-        $this->setExpectedException('InvalidArgumentException', 'path argument must be a string');
+        $this->expectExceptionMessage('path argument must be a string');
         $this->uri->withPath($this);
 
         $new_uri = $this->uri->withPath('/api/aa');
@@ -89,9 +90,9 @@ class UriTest extends \PHPUnit_Framework_TestCase
         $new_uri = $this->uri->withQuery($this->uri->getQuery());
         $this->assertNotSame($this->uri, $new_uri);
 
-        $this->setExpectedException('InvalidArgumentException', 'query argument must be a string');
+        $this->expectExceptionMessage('query argument must be a string');
         $this->uri->withQuery(12345);
-        $this->setExpectedException('InvalidArgumentException', 'query argument must be a string');
+        $this->expectExceptionMessage('query argument must be a string');
         $this->uri->withQuery($this);
 
         $new_uri = $this->uri->withQuery('?test=123');
@@ -105,9 +106,9 @@ class UriTest extends \PHPUnit_Framework_TestCase
         $new_uri = $this->uri->withFragment($this->uri->getFragment());
         $this->assertNotSame($this->uri, $new_uri);
 
-        $this->setExpectedException('InvalidArgumentException', 'fragment argument must be a string');
+        $this->expectExceptionMessage('fragment argument must be a string');
         $this->uri->withFragment(12345);
-        $this->setExpectedException('InvalidArgumentException', 'fragment argument must be a string');
+        $this->expectExceptionMessage('fragment argument must be a string');
         $this->uri->withFragment($this);
 
         $new_uri = $this->uri->withFragment('#test');

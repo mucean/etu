@@ -3,7 +3,7 @@ namespace Tests\Http;
 
 use Etu\Http\UploadedFile;
 
-class UploadedFileTest extends \PHPUnit_Framework_TestCase
+class UploadedFileTest extends \PHPUnit\Framework\TestCase
 {
     protected static $file = './testfile';
 
@@ -39,7 +39,7 @@ class UploadedFileTest extends \PHPUnit_Framework_TestCase
 
     public function testConstruct()
     {
-        $_FILES = [
+        $file = [
             'tmp_name' => self::$file,
             'name' => 'testFile',
             'type' => 'text/plain',
@@ -48,20 +48,20 @@ class UploadedFileTest extends \PHPUnit_Framework_TestCase
         ];
 
         $uploadedFile = new UploadedFile(
-            $_FILES['tmp_name'],
-            $_FILES['name'],
-            $_FILES['type'],
-            $_FILES['size'],
-            $_FILES['error'],
+            $file['tmp_name'],
+            $file['name'],
+            $file['type'],
+            $file['size'],
+            $file['error'],
             false
         );
 
         $this->assertInstanceOf('\Etu\Http\UploadedFile', $uploadedFile);
 
-        $this->assertEquals($uploadedFile->getClientFilename(), $_FILES['name']);
-        $this->assertEquals($uploadedFile->getClientMediaType(), $_FILES['type']);
-        $this->assertEquals($uploadedFile->getSize(), $_FILES['size']);
-        $this->assertEquals($uploadedFile->getError(), $_FILES['error']);
+        $this->assertEquals($uploadedFile->getClientFilename(), $file['name']);
+        $this->assertEquals($uploadedFile->getClientMediaType(), $file['type']);
+        $this->assertEquals($uploadedFile->getSize(), $file['size']);
+        $this->assertEquals($uploadedFile->getError(), $file['error']);
 
         return $uploadedFile;
     }
@@ -89,7 +89,7 @@ class UploadedFileTest extends \PHPUnit_Framework_TestCase
             unlink('./abc.txt');
         }
 
-        $this->setExpectedException('\RuntimeException', sprintf(
+        $this->expectExceptionMessage(sprintf(
             'uploaded file %s has been moved',
             $uploadedFile->getClientFilename()
         ));

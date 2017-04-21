@@ -61,7 +61,8 @@ class Container implements ContainerInterface
 
         if (is_callable($value) && !$this->hasProperty('calls', $id)) {
             $call = $value;
-            $value = call_user_func_array($value, array_unshift($arguments, $this));
+            array_unshift($arguments, $this);
+            $value = call_user_func_array($value, $arguments);
             if (!$this->hasProperty('maintain', $id)) {
                 $this->setProperty('calls', $id, $call);
                 $this->setProperty('container', $id, $value);

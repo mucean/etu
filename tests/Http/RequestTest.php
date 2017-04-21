@@ -3,9 +3,13 @@ namespace Tests\Http;
 
 use Etu\Http\Request;
 use Etu\Http\Uri;
+use Psr\Http\Message\ServerRequestInterface;
 
-class RequestTest extends \PHPUnit_Framework_TestCase
+class RequestTest extends \PHPUnit\Framework\TestCase
 {
+    /**
+     * @var ServerRequestInterface
+     */
     protected $request;
 
     protected $context;
@@ -96,10 +100,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($newRequest->getParsedBody(), ['hi' => 'hello, world!']);
         $newRequest = $request->withParsedBody($this);
         $this->assertEquals($newRequest->getParsedBody(), $this);
-        $this->setExpectedException(
-            'InvalidArgumentException',
-            'Parsed body must be an array type, an object type or null'
-        );
+        $this->expectExceptionMessage('Parsed body must be an array type, an object type or null');
         $request->withParsedBody('error');
     }
 
@@ -164,13 +165,13 @@ class RequestTest extends \PHPUnit_Framework_TestCase
     {
         $newRequest = $this->request->withMethod('DELETE');
         $this->assertEquals($newRequest->getMethod(), 'DELETE');
-        $this->setExpectedException('InvalidArgumentException', 'request method must be a string');
+        $this->expectExceptionMessage('request method must be a string');
         $this->request->withMethod([]);
     }
 
     public function testWithMethodException()
     {
-        $this->setExpectedException('InvalidArgumentException', 'Request method must be a valid method');
+        $this->expectExceptionMessage('Request method must be a valid method');
         $this->request->withMethod('hello');
     }
 

@@ -3,8 +3,9 @@ namespace Tests;
 
 use Etu\Container;
 use Etu\DefaultServices;
+use Etu\Interfaces\ContainerInterface;
 
-class ContainerTest extends \PHPUnit_Framework_TestCase
+class ContainerTest extends \PHPUnit\Framework\TestCase
 {
     public function testConstruct()
     {
@@ -29,9 +30,9 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetIfNotExist(Container $container)
     {
-        $iden = 'hello';
-        $this->setExpectedException('InvalidArgumentException', sprintf('Identifier %s is not found', $iden));
-        $container->get($iden);
+        $identify = 'hello';
+        $this->expectExceptionMessage(sprintf('Identifier %s is not found', $identify));
+        $container->get($identify);
     }
 
     /**
@@ -39,37 +40,39 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testAdd(Container $container)
     {
-        $iden = 'hi';
+        $identify = 'hi';
         $value = 'Hello, world!';
-        $container->add($iden, $value);
-        $this->assertEquals($value, $container->get($iden));
+        $container->add($identify, $value);
+        $this->assertEquals($value, $container->get($identify));
     }
 
     /**
+     * @param $container ContainerInterface
      * @depends testConstruct
      */
-    public function testAddClosure(Container $container)
+    public function testAddClosure(ContainerInterface $container)
     {
         $context = $container->get('context');
-        $iden = 'Closure';
-        $value = function () {
-            return $this->get('context');
+        $identifytify = 'Closure';
+        $value = function (ContainerInterface $container) {
+            return $container->get('context');
         };
-        $container->add($iden, $value);
-        $this->assertEquals($context, $container->get($iden));
+        $container->add($identifytify, $value);
+        $this->assertEquals($context, $container->get($identifytify));
     }
 
     /**
+     * @param $container ContainerInterface
      * @depends testConstruct
      */
-    public function testRemove(Container $container)
+    public function testRemove(ContainerInterface $container)
     {
-        $iden = 'hi';
+        $identify = 'hi';
         $value = 'Hello, world!';
-        $this->assertEquals($value, $container->get($iden));
-        $container->remove($iden);
-        $this->setExpectedException('InvalidArgumentException', sprintf('Identifier %s is not found', $iden));
-        $container->get($iden);
+        $this->assertEquals($value, $container->get($identify));
+        $container->remove($identify);
+        $this->expectExceptionMessage(sprintf('Identifier %s is not found', $identify));
+        $container->get($identify);
     }
 
     /**
@@ -78,13 +81,13 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetCalledCall(Container $container)
     {
         $context = $container->get('context');
-        $iden = 'Closure';
-        $value = function () {
-            return $this->get('context');
+        $identify = 'Closure';
+        $value = function (ContainerInterface $container) {
+            return $container->get('context');
         };
-        $container->add($iden, $value);
-        $this->assertEquals($context, $container->get($iden));
-        $this->assertInstanceOf('Closure', $container->getCalledCall($iden));
+        $container->add($identify, $value);
+        $this->assertEquals($context, $container->get($identify));
+        $this->assertInstanceOf('Closure', $container->getCalledCall($identify));
     }
 
     /**
@@ -93,18 +96,15 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testMaintain(Container $container)
     {
         $context = $container->get('context');
-        $iden = 'Closure';
-        $value = function () {
-            return $this->get('context');
+        $identify = 'Closure';
+        $value = function (ContainerInterface $container) {
+            return $container->get('context');
         };
-        $container->add($iden, $value);
-        $container->maintain($iden);
-        $this->assertEquals($context, $container->get($iden));
-        $this->setExpectedException(
-            'InvalidArgumentException',
-            sprintf('Identifier %s is not found or not called', $iden)
-        );
-        $container->getCalledCall($iden);
+        $container->add($identify, $value);
+        $container->maintain($identify);
+        $this->assertEquals($context, $container->get($identify));
+        $this->expectExceptionMessage(sprintf('Identifier %s is not found or not called', $identify));
+        $container->getCalledCall($identify);
     }
 
     /**
@@ -113,17 +113,14 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testCalledCanNotMaintain(Container $container)
     {
         $context = $container->get('context');
-        $iden = 'Closure';
-        $value = function () {
-            return $this->get('context');
+        $identify = 'Closure';
+        $value = function (ContainerInterface $container) {
+            return $container->get('context');
         };
-        $container->add($iden, $value);
-        $this->assertEquals($context, $container->get($iden));
-        $this->setExpectedException(
-            'InvalidArgumentException',
-            'service has been called, can not maintain'
-        );
-        $container->maintain($iden);
+        $container->add($identify, $value);
+        $this->assertEquals($context, $container->get($identify));
+        $this->expectExceptionMessage('service has been called, can not maintain');
+        $container->maintain($identify);
     }
 
     /**
@@ -131,14 +128,11 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testNotCallableCanNotMaintain(Container $container)
     {
-        $iden = 'hi';
+        $identify = 'hi';
         $value = 'Hello, world!';
-        $container->add($iden, $value);
-        $this->setExpectedException(
-            'InvalidArgumentException',
-            'maintain service must be a callable function or object'
-        );
-        $container->maintain($iden);
+        $container->add($identify, $value);
+        $this->expectExceptionMessage('maintain service must be a callable function or object');
+        $container->maintain($identify);
     }
 
     /**
@@ -147,16 +141,16 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testUpdate(Container $container)
     {
         $context = $container->get('context');
-        $iden = 'Closure';
-        $value = function () {
-            return $this->get('context');
+        $identify = 'Closure';
+        $value = function (ContainerInterface $container) {
+            return $container->get('context');
         };
-        $container->add($iden, $value);
-        $this->assertEquals($context, $container->get($iden));
+        $container->add($identify, $value);
+        $this->assertEquals($context, $container->get($identify));
         $updateValue = 'Hello, world!';
-        $container->update($iden, $updateValue);
-        $this->assertEquals($updateValue, $container->get($iden));
-        $this->assertInstanceOf('Closure', $container->getCalledCall($iden));
+        $container->update($identify, $updateValue);
+        $this->assertEquals($updateValue, $container->get($identify));
+        $this->assertInstanceOf('Closure', $container->getCalledCall($identify));
     }
 
     /**
@@ -164,11 +158,8 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testUpdateException(Container $container)
     {
-        $iden = 'errorId';
-        $this->setExpectedException(
-            'InvalidArgumentException',
-            sprintf('Identifier %s is not found', $iden)
-        );
-        $container->update($iden, 'error');
+        $identify = 'errorId';
+        $this->expectExceptionMessage(sprintf('Identifier %s is not found', $identify));
+        $container->update($identify, 'error');
     }
 }

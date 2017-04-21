@@ -3,7 +3,7 @@ namespace Tests\Http;
 
 use Etu\Http\Context;
 
-class ContextTest extends \PHPUnit_Framework_TestCase
+class ContextTest extends \PHPUnit\Framework\TestCase
 {
     public function testConstruct()
     {

@@ -3,7 +3,7 @@ namespace Tests\Http;
 
 use Etu\Http\Response;
 
-class ResponseTest extends \PHPUnit_Framework_TestCase
+class ResponseTest extends \PHPUnit\Framework\TestCase
 {
     public function testConstruct()
     {
@@ -41,7 +41,7 @@ class ResponseTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($newResponse->getReasonPhrase(), 'Not Found');
         $newResponse = $response->withStatus(555);
         $this->assertEquals($newResponse->getReasonPhrase(), '');
-        $this->setExpectedException('InvalidArgumentException', 'Invalid status code');
+        $this->expectExceptionMessage('Invalid status code');
         $response->withStatus(900);
     }
 }

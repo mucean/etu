@@ -6,7 +6,7 @@ use Etu\ArrayAccess;
 /**
  * Class ArrayAccessTest
  */
-class ArrayAccessTest extends \PHPUnit_Framework_TestCase
+class ArrayAccessTest extends \PHPUnit\Framework\TestCase
 {
     protected $test;
 

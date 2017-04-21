@@ -7,7 +7,7 @@ use Etu\Http\Headers;
 /**
  * Class HeadersTest
  */
-class HeadersTest extends \PHPUnit_Framework_TestCase
+class HeadersTest extends \PHPUnit\Framework\TestCase
 {
     protected $headers;
 

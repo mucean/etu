@@ -20,6 +20,7 @@ class Application
     protected $defaultSetting = [
         'showErrorDetails' => false,
         'addContentLengthHeader' => true,
+        'responseChunkSize' => 1024,
     ];
 
     public function __construct($container = [])
@@ -121,6 +122,11 @@ class Application
         return $response;
     }
 
+    /**
+     * send response to client
+     *
+     * @param ResponseInterface $response
+     */
     public function respond(ResponseInterface $response)
     {
         if (!headers_sent()) {
@@ -139,10 +145,50 @@ class Application
         }
 
         if ($this->isEmptyResponse($response)) {
+            return;
         }
-        echo $response->getBody();
+
+        $chunkSize = $this->container->get('setting')->get('responseChunkSize');
+        if ($chunkSize <= 0) {
+            throw new \RuntimeException('response chunk size must greater than 0');
+        }
+
+        $body = $response->getBody();
+        if ($body->isSeekable()) {
+            $body->rewind();
+        }
+
+        $contentLength = $response->getHeader('Content-Length');
+        if (!$contentLength) {
+            $contentLength = $body->getSize();
+        }
+
+        if (isset($contentLength)) {
+            $leftToRead = $contentLength;
+            while ($leftToRead && !$body->eof()) {
+                $data = $body->read(min($chunkSize, $leftToRead));
+                if (connection_status() != CONNECTION_NORMAL) {
+                    break;
+                }
+                echo $data;
+                $leftToRead -= strlen($data);
+            }
+        } else {
+            while (!$body->eof()) {
+                if (connection_status() != CONNECTION_NORMAL) {
+                    break;
+                }
+                echo $body->read($chunkSize);
+            }
+        }
     }
 
+    /**
+     * add middleware
+     *
+     * @param callable $middleware
+     * @return $this
+     */
     public function add(callable $middleware)
     {
         if ($middleware instanceof \Closure) {
@@ -193,6 +239,12 @@ class Application
         return $router->execute($request, $response);
     }
 
+    /**
+     * determine whether response is empty
+     *
+     * @param ResponseInterface $response
+     * @return bool
+     */
     public function isEmptyResponse(ResponseInterface $response)
     {
         if ($this->container->has('emptyResponseCheck')) {

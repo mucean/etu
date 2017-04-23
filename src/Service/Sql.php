@@ -73,7 +73,7 @@ class Sql extends Service
     /**
      * update database
      *
-     * @param $table string
+     * @param string $table
      * @return Sql\Command\Update
      */
     public function update($table)
@@ -104,7 +104,7 @@ class Sql extends Service
     /**
      * execute a sql
      *
-     * @param $sql string | PDOStatement
+     * @param string | PDOStatement $sql
      * @param $parameters array
      * @throws Exception
      * @return PDOStatement
@@ -126,7 +126,7 @@ class Sql extends Service
     /**
      * quote sql identifier
      *
-     * @param $identifier string | array
+     * @param string | array $identifier
      * @return string
      */
     public function quoteIdentifier($identifier)

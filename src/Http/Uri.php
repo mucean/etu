@@ -23,8 +23,9 @@ class Uri implements UriInterface
     protected $fragment = false;
 
     /**
-     * @var string $url
+     * @param string $url
      * @return self
+     * @throws \Exception
      */
     public static function buildFromUrl($url = null)
     {

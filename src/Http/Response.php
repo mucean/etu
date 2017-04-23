@@ -85,7 +85,7 @@ class Response extends Message implements ResponseInterface
         }
 
         $this->headers = $headers;
-        $this->body = $body ? $body : new Stream(fopen('php://temp', 'w+'));
+        $this->body = $body ? $body : new Stream(fopen('php://temp', 'r+'));
     }
 
     public function getStatusCode()
@@ -102,7 +102,7 @@ class Response extends Message implements ResponseInterface
         if ($reasonPhrase) {
             $new->reasonPhrase = $reasonPhrase;
         } else {
-            $new->reasonPhrase = $new->getDefaultReasonPhrase($code);
+            $new->reasonPhrase = $new->getReasonPhrase();
         }
 
         return $new;
@@ -126,16 +126,32 @@ class Response extends Message implements ResponseInterface
         return $this;
     }
 
+    /**
+     * @param $url
+     * @param int $statusCode
+     * @return Response|static
+     */
     public function redirect($url, $statusCode = 302)
     {
-        /** @var $new Response */
-        $new = $this->withHeader('Location', (string) $url);
+        return $this->withHeader('Location', (string) $url)->withStatus($statusCode);
+    }
 
-        if ($new->getStatusCode() === 200) {
-            return $new->withStatus($statusCode);
+    /**
+     * response a json data to client
+     *
+     * @param string $data
+     * @param int $jsonOptions
+     * @return static
+     */
+    public function withJson($data, $jsonOptions = 0)
+    {
+        $new = $this->withBody(new Stream(fopen('php://temp', 'r+')));
+        $new->write(json_encode($data, $jsonOptions));
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException(json_last_error_msg(), json_last_error());
         }
 
-        return $new;
+        return $new->withHeader('Content-Type', 'application/json;charset=utf-8');
     }
 
     protected function validateStatusCode($statusCode)

@@ -19,13 +19,15 @@ class MiddlewareTest extends \PHPUnit\Framework\TestCase
         $this->addMiddleware(function ($request, $response, $next) {
             $response->write('2');
             $response = $next($request, $response);
-            return $response->write('4');
+            $response->write('4');
+            return $response;
         });
 
         $this->addMiddleware(function ($request, $response, $next) {
             $response->write('1');
             $response = $next($request, $response);
-            return $response->write('5');
+            $response->write('5');
+            return $response;
         });
 
         $container = new Container();
@@ -37,6 +39,7 @@ class MiddlewareTest extends \PHPUnit\Framework\TestCase
 
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response)
     {
-        return $response->write('3');
+        $response->write('3');
+        return $response;
     }
 }

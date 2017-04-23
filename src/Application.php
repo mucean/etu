@@ -6,10 +6,6 @@ use Etu\Traits\EtuMiddleware as Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Etu\Exception\NotFoundException;
-use InvalidArgumentException;
-use Closure;
-use Exception;
-use Throwable;
 
 class Application
 {
@@ -22,23 +18,26 @@ class Application
     protected $container;
 
     protected $defaultSetting = [
-        'showErrorDetails' => false
+        'showErrorDetails' => false,
+        'addContentLengthHeader' => true,
     ];
 
     public function __construct($container = [])
     {
         if (is_array($container)) {
-            if (isset($container['setting']) === false) {
-                $container['setting'] = [];
+            $setting = $this->defaultSetting;
+            if (isset($container['setting'])) {
+                $setting = array_merge($setting, $container['setting']);
+                unset($container['setting']);
             }
 
-            $container['setting'] = array_merge($this->defaultSetting, $container['setting']);
             $container = new Container($container);
             DefaultServices::register($container);
+            $container->get('setting')->setArray($setting);
         }
 
         if (!($container instanceof ContainerInterface)) {
-            throw new InvalidArgumentException('A class instance expected implement ContainerInterface');
+            throw new \InvalidArgumentException('A class instance expected implement ContainerInterface');
         }
 
         $this->container = $container;
@@ -56,7 +55,7 @@ class Application
     /**
      * run app handle request
      *
-     * @param bool $silent
+     * @param $silent bool
      * @return ResponseInterface
      */
     public function run($silent = false)
@@ -67,26 +66,62 @@ class Application
         $response = $this->process($request, $response);
 
         if ($silent === false) {
-            $this->response($response);
+            $this->respond($response);
         }
 
         return $response;
     }
 
+    /**
+     * process the request
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     */
     public function process(ServerRequestInterface $request, ResponseInterface $response)
     {
         try {
-            $this->executeMiddleware($request, $response);
-        } catch (Exception $e) {
+            $response = $this->executeMiddleware($request, $response);
+        } catch (\Exception $e) {
             $response = $this->handleException($e, $request, $response);
-        } catch (Throwable $error) {
+        } catch (\Throwable $error) {
             $response = $this->handleError($error, $request, $response);
+        }
+
+        $response = $this->finalize($response);
+
+        return $response;
+    }
+
+    /**
+     * finalize the response
+     *
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     */
+    public function finalize(ResponseInterface $response)
+    {
+        ini_set('default_mimetype', '');
+
+        if ($this->isEmptyResponse($response)) {
+            return $response->withoutHeader('Content-Type')->withoutHeader('Content-Length');
+        }
+
+        if ($this->container->get('setting')->get('addContentLengthHeader')) {
+            if (ob_get_length() > 0) {
+                throw new \RuntimeException('Output buffer has unexpected data');
+            }
+            $length = $response->getBody()->getSize();
+            if ($length !== null && !$response->hasHeader('Content-Length')) {
+                return $response->withHeader('Content-Length', strval($length));
+            }
         }
 
         return $response;
     }
 
-    public function response(ResponseInterface $response)
+    public function respond(ResponseInterface $response)
     {
         if (!headers_sent()) {
             header(sprintf(
@@ -102,12 +137,15 @@ class Application
                 }
             }
         }
+
+        if ($this->isEmptyResponse($response)) {
+        }
         echo $response->getBody();
     }
 
     public function add(callable $middleware)
     {
-        if ($middleware instanceof Closure) {
+        if ($middleware instanceof \Closure) {
             $middleware = $middleware->bindTo($this);
         }
 
@@ -115,7 +153,7 @@ class Application
         return $this;
     }
 
-    public function handleException(Exception $exp, ServerRequestInterface $request, ResponseInterface $response)
+    public function handleException(\Exception $exp, ServerRequestInterface $request, ResponseInterface $response)
     {
         $handler = '';
         if ($exp instanceof NotFoundException) {
@@ -135,7 +173,7 @@ class Application
         return call_user_func_array($this->container->get($handler), $parameters);
     }
 
-    public function handleError(Throwable $error, ServerRequestInterface $request, ResponseInterface $response)
+    public function handleError(\Throwable $error, ServerRequestInterface $request, ResponseInterface $response)
     {
         $handler = 'errorHandler';
 
@@ -155,6 +193,15 @@ class Application
         return $router->execute($request, $response);
     }
 
+    public function isEmptyResponse(ResponseInterface $response)
+    {
+        if ($this->container->has('emptyResponseCheck')) {
+            return $this->container->get('emptyResponseCheck')($response);
+        }
+
+        return in_array($response->getStatusCode(), [204, 302, 304]);
+    }
+
     /**
      * Register a namespace bind directory for auto load class
      *
@@ -171,7 +218,7 @@ class Application
 
         if (TEST) {
             if (!is_dir($dir)) {
-                throw new Exception(
+                throw new \Exception(
                     sprintf('invalid directory was given: %s', $dir)
                 );
             }

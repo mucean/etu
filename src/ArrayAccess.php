@@ -21,6 +21,34 @@ class ArrayAccess implements Countable, \ArrayAccess, IteratorAggregate
         }
     }
 
+    /**
+     * reset the array
+     *
+     * @param array $values
+     * @return $this
+     */
+    public function reset(array $values = [])
+    {
+        $this->values = [];
+        foreach ($values as $key => $value) {
+            $this->set($key, $value);
+        }
+        return $this;
+    }
+
+    /**
+     * set a array to the array
+     * @param array $values
+     * @return $this
+     */
+    public function setArray(array $values)
+    {
+        foreach ($values as $key => $value) {
+            $this->set($key, $value);
+        }
+        return $this;
+    }
+
     public function all()
     {
         return $this->values;

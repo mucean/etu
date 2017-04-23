@@ -12,11 +12,11 @@ class Context extends ArrayAccess
 
     public function keys()
     {
-        return array_keys($this->values);
+        return array_keys($this->all());
     }
 
     public function merge(array $data)
     {
-        $this->values = array_merge($this->values, $data);
+        return $this->reset(array_merge($this->all(), $data));
     }
 }

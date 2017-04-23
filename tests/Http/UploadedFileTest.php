@@ -25,6 +25,8 @@ class UploadedFileTest extends \PHPUnit\Framework\TestCase
         if (file_exists(self::$file)) {
             unlink(self::$file);
         }
+        // empty $_FILES after class
+        $_FILES = [];
     }
 
     /**

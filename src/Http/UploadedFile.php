@@ -111,11 +111,11 @@ class UploadedFile implements UploadedFileInterface
                 throw new RuntimeException('Occur error when moving file');
             }
         } elseif ($this->sapi) {
-            if (!is_uploaded_file($tmpName)) {
-                throw new RuntimeException(sprintf('%s is not uploaded file', $tmpName));
+            if (!is_uploaded_file($this->tmpName)) {
+                throw new RuntimeException(sprintf('%s is not uploaded file', $this->tmpName));
             }
 
-            if (!move_uploaded_file($tmpName, $targetPath)) {
+            if (!move_uploaded_file($this->tmpName, $targetPath)) {
                 throw new RuntimeException('Occur error when moving file');
             }
         } else {

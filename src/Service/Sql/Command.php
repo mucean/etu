@@ -94,12 +94,14 @@ abstract class Command
 
     /**
      * set the trigger of need prepare is true
+     * @return $this
      */
     public function needToPrepare()
     {
         if ($this->needPrepare === false) {
             $this->needPrepare = true;
         }
+        return $this;
     }
 
     /**

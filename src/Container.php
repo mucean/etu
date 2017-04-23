@@ -17,8 +17,6 @@ class Container implements ContainerInterface
 
     protected $calls = [];
 
-    protected $defaultSetting = [];
-
     public function __construct(array $items = [])
     {
         $this->registerPropertyAccess('container', true);
@@ -26,20 +24,6 @@ class Container implements ContainerInterface
         $this->registerPropertyAccess('maintain', true);
 
         $this->registerPropertyAccess('calls', true);
-
-        $setting = $this->defaultSetting;
-        if (isset($items['setting'])) {
-            $setting = array_merge($setting, $items['setting']);
-            unset($items['setting']);
-        }
-
-        $this->add(
-            'setting',
-            function () use ($setting) {
-                return new ArrayAccess($setting);
-            },
-            false
-        );
 
         foreach ($items as $item) {
             if (!is_array($item) || count($item) < 2) {

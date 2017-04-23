@@ -13,6 +13,12 @@ class DefaultServices
 {
     public static function register(ContainerInterface $container)
     {
+        if (!$container->has('setting')) {
+            $container->add('setting', function () {
+                return new ArrayAccess();
+            });
+        }
+
         if (!$container->has('context')) {
             $container->add('context', function () {
                 return new Context($_SERVER);
@@ -33,9 +39,12 @@ class DefaultServices
         }
 
         if (!$container->has('router')) {
-            $container->add('router', function (ContainerInterface $container, $path = '/Controller', $namespace = '\\') {
-                return new Router($path, $namespace, $container);
-            });
+            $container->add(
+                'router',
+                function (ContainerInterface $container, $path = '/Controller', $namespace = '\\') {
+                    return new Router($path, $namespace, $container);
+                }
+            );
         }
 
         if (!$container->has('errorHandler')) {

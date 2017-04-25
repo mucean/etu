@@ -148,7 +148,7 @@ class Application
             return;
         }
 
-        $chunkSize = $this->container->get('setting')->get('responseChunkSize');
+        $chunkSize = intval($this->container->get('setting')->get('responseChunkSize'));
         if ($chunkSize <= 0) {
             throw new \RuntimeException('response chunk size must greater than 0');
         }
